@@ -1,9 +1,9 @@
 #ifndef _TBMARK_HEADER
 #define _TBMARK_HEADER
 
-#define TBM_NUM_CMDARGS (sizeof(tbm_cmdarg_table)/sizeof(tbm_cmdarg_table[0]))
+#define TBM_NUM_SUBCMDS (sizeof(tbm_subcmd_table)/sizeof(tbm_subcmd_table[0]))
 
-int tbm_index(const char *cmdarg);
+int tbm_index(const char *subcmd);
 int tbm_save(const char *shell);
 int tbm_open(const char *shell);
 int tbm_delete(const char *shell);
@@ -18,7 +18,7 @@ typedef struct str_int_map {
 	int cmd_int;
 } str_int_map;
 
-str_int_map tbm_cmdarg_table[] = {
+str_int_map tbm_subcmd_table[] = {
 	{"save", 0},
 	{"open", 1},
 	{"delete", 2}

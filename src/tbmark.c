@@ -23,12 +23,12 @@
 
 /* Currently supported flags: save, open, delete, help */
 
-int tbm_index(const char *cmdarg) {
-	for (int i = 0; i < TBM_NUM_CMDARGS; i++) {
-		if (!cmdarg) break;
+int tbm_index(const char *subcmd) {
+	for (int i = 0; i < TBM_NUM_SUBCMDS; i++) {
+		if (!subcmd) break;
 
-		if (strncmp(cmdarg, tbm_cmdarg_table[i].cmd, strnlen(tbm_cmdarg_table[i].cmd, 30)) == 0) {
-			return tbm_cmdarg_table[i].cmd_int;
+		if (strncmp(subcmd, tbm_subcmd_table[i].cmd, strnlen(tbm_subcmd_table[i].cmd, 30)) == 0) {
+			return tbm_subcmd_table[i].cmd_int;
 		}
 	}
 

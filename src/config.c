@@ -74,8 +74,8 @@ int extract_tbm_entry_field_int(const char *buf, size_t tag_and_value_len, char 
 }
 
 /* Strips the argument portion of a command and return it */
-char *strip_args_from_cmd(char *str, size_t max_str_len) {
-        char *stripped = calloc(strnlen(str, max_str_len), sizeof(char));
+char *strip_args_from_cmd(const char *cmd, size_t max_cmd_len) {
+        char *stripped = calloc(strnlen(cmd, max_cmd_len), sizeof(char));
         ASSERT_NULL(stripped != NULL);
 
         regex_t strip_delim_regex;
@@ -84,12 +84,12 @@ char *strip_args_from_cmd(char *str, size_t max_str_len) {
 
         /* NOTE: This hack might not be defined behaviour, should be looked into deeper (it works though) */
         ASSERT_NULL(regcomp(&strip_delim_regex, "\\<(.*)>", REG_EXTENDED) == 0);
-        ASSERT_NULL((status = regexec(&strip_delim_regex, str, 1, &strip_delim_index, 0)) != REG_NOMATCH);
+        ASSERT_NULL((status = regexec(&strip_delim_regex, cmd, 1, &strip_delim_index, 0)) != REG_NOMATCH);
 
         regfree(&strip_delim_regex);
         if (status == 0) {
                 for (int i = strip_delim_index.rm_so, j = 0; i < strip_delim_index.rm_eo-1; i++, j++) {
-                        stripped[j] = str[i];
+                        stripped[j] = cmd[i];
                 }
         }
 

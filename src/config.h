@@ -30,7 +30,7 @@ typedef struct {
 char *extract_tbm_entry_field_str(const char *buf, size_t tag_and_value_len, char *tag);
 int extract_tbm_entry_field_int(const char *buf, size_t tag_and_value_len, char *tag);
 
-char *strip_args_from_cmd(char *str, size_t max_str_len);
+char *strip_args_from_cmd(const char *cmd, size_t max_cmd_len);
 
 int cfg_create(const char *pathname);
 void cfg_delete(const char *pathname);
