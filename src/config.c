@@ -136,7 +136,7 @@ CfgInfoArr *cfg_parse(int fd) {
 	/* Get line count of tbmark's config file */
 	int line_index = 1;
         for (int i = 0; i < sbuf.st_size; i++) {
-                if (buf[i] == '\n' && !isspace(buf[i+1])) {
+                if (buf[i] == '\n' && !isspace(buf[i + 1])) {
                         lines[line_index++] = i;
                         tbmark_entries_len++;
                 }
@@ -146,12 +146,13 @@ CfgInfoArr *cfg_parse(int fd) {
 	cfginfo_list->entries_len = tbmark_entries_len;
 
 	for (int i = 0; i < tbmark_entries_len; i++) {
-		cwdir = extract_tbm_entry_field_str(buf+lines[i], PATH_MAX, "cwd:");
-		cmd = extract_tbm_entry_field_str(buf+lines[i], PATH_MAX, "cmdlargs:");
+		cwdir = extract_tbm_entry_field_str(buf + lines[i], PATH_MAX, "cwd:");
+		cmd = extract_tbm_entry_field_str(buf + lines[i], PATH_MAX, "cmdlargs:");
 		comm = extract_tbm_entry_field_str(cmd, MAX_COMM_LEN, "");
 
+
 		// NOTE: In cases where a '[' character is found in the `cmdlargs` field, our solution below breaks
-		args = (strstr(cmd, "") == NULL || strstr(cmd, "(metadata)") != NULL || cmd[strnlen(comm, MAX_COMM_LEN)+1] == '[')
+		args = (strstr(cmd, "") == NULL || strstr(cmd, "(metadata)") != NULL || cmd[strnlen(comm, MAX_COMM_LEN) + 1] == '[')
 			? "" 
 			: extract_tbm_entry_field_str(cmd + strnlen(comm, MAX_COMM_LEN) + 1, PATH_MAX, "");
 
@@ -174,13 +175,13 @@ CfgInfoArr *cfg_parse(int fd) {
 			: cmd + strnlen(comm, MAX_COMM_LEN) + 12;
 
 		/* We check and see if the current command was started within an `iprogram` */
-		iprog_args = extract_tbm_entry_field_str(buf+lines[i], PATH_MAX, "cmdlargs:");
+		iprog_args = extract_tbm_entry_field_str(buf + lines[i], PATH_MAX, "cmdlargs:");
 		int iprogram_index = is_iprogram(iprog_args + strnlen(comm, MAX_COMM_LEN) + strnlen(args, PATH_MAX) + 2);
 		free(iprog_args);
 
 		if (iprogram_index != -1) {
 			iprog_name = get_iprogram_name(iprogram_index);
-			iprog_info = iprogram_parsers[iprogram_index](buf+lines[i]);
+			iprog_info = iprogram_parsers[iprogram_index](buf + lines[i]);
 		} else {
 			iprog_name = NULL;
 			iprog_info = "";
@@ -189,7 +190,7 @@ CfgInfoArr *cfg_parse(int fd) {
 #ifdef DEBUG
 		printf("\n");
 		LOG("(cwdir): %s (%ld)\n", cwdir, strnlen(cwdir, PATH_MAX));
-		LOG("(comm): %s (%ld)\n", comm+1, strnlen(comm, MAX_COMM_LEN));
+		LOG("(comm): %s (%ld)\n", comm + 1, strnlen(comm, MAX_COMM_LEN));
 
 		if (strnlen(args, PATH_MAX) > 0) {
 			LOG("(args): %s (%ld)\n", args, strnlen(args, PATH_MAX));
@@ -207,7 +208,7 @@ CfgInfoArr *cfg_parse(int fd) {
 
 		// NOTE: ASan might've been masking the crash on the following lines since some buffer zones are added before and after memory allocations for instrumentation purposes
 		strncpy(cfginfo_list->entries[i].cwd, cwdir, strnlen(cwdir, PATH_MAX));
-		strncpy(cfginfo_list->entries[i].comm, comm+1, strnlen(comm, MAX_COMM_LEN));
+		strncpy(cfginfo_list->entries[i].comm, comm + 1, strnlen(comm, MAX_COMM_LEN));
 		strncpy(cfginfo_list->entries[i].cmdlargs, args, strnlen(args, ARGMAX));
 		strncpy(cfginfo_list->entries[i].metadata, metadata, strnlen(metadata, ARGMAX));
 
@@ -251,7 +252,7 @@ int cfg_exec(int fd, pid_t ppid, CfgInfoArr *cfginfo_list) {
 	for (int t = 0, i = 0, r = 0; t < cfginfo_list->entries_len; t++) {
 		/* `iprogram` tabs are formatted here + iprogram-specific metadata assignment to their respective variables */
 		if (strnlen(cfginfo_list->entries[t].iprogram_name, MAX_COMM_LEN) > 0) {
-			printf(" ↳ %s %d (%s): \"%s", iprogram_glossary[cfginfo_list->entries[t].iprogram_index], i+1, cfginfo_list->entries[t].cwd, cfginfo_list->entries[t].comm);
+			printf(" ↳ %s %d (%s): \"%s", iprogram_glossary[cfginfo_list->entries[t].iprogram_index], i + 1, cfginfo_list->entries[t].cwd, cfginfo_list->entries[t].comm);
 
 			if (strncmp(cfginfo_list->entries[t].cmdlargs, "", 1) != 0) {
 				printf(" %s", cfginfo_list->entries[t].cmdlargs);
@@ -259,7 +260,7 @@ int cfg_exec(int fd, pid_t ppid, CfgInfoArr *cfginfo_list) {
 			printf("\"\n");
 			i++;
 		} else {
-			printf("Tab %d (%s): \"%s", r+1, cfginfo_list->entries[t].cwd, cfginfo_list->entries[t].comm);
+			printf("Tab %d (%s): \"%s", r + 1, cfginfo_list->entries[t].cwd, cfginfo_list->entries[t].comm);
 
 			if (strncmp(cfginfo_list->entries[t].cmdlargs, "", 1) != 0) {
 				printf(" %s", cfginfo_list->entries[t].cmdlargs);
