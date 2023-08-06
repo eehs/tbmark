@@ -268,8 +268,9 @@ void get_proc_info_cttabs(int cfg_fd, PIDInfo shell, PIDInfoArr *child, enum act
 				int get_window_pane_count_res;
 				size_t tmux_pane_count;
 				char **tmux_panes_arr;
-				/* `path` here is used for adding metadata information as well as removing pre-parsed entries in `tbmark.cfg` */
-				char tmux_buf[IPROG_INFO_SIZE], path[PATH_MAX]; 
+
+				/* `cfgpath` here is used for adding metadata information and removing pre-parsed entries in the tbmark configuration file */
+				char cfg_fdpath[22], cfgpath[PATH_MAX], tmux_buf[IPROG_INFO_SIZE];
 
 				tmux_server_metadata = calloc(PATH_MAX, sizeof(char));
 				ASSERT_EXIT(tmux_server_metadata != NULL);
@@ -288,7 +289,7 @@ void get_proc_info_cttabs(int cfg_fd, PIDInfo shell, PIDInfoArr *child, enum act
 				tmux_pane_count = atoi(count);
 				free(count);
 
-				/* Append iprogram metadata to `buf` */
+				/* Append tmux pane command and metadata to `buf` */
 				ttab_entry_size = strnlen(cwd, PATH_MAX) + strnlen(cmdlargs, ARGMAX) + 31; // This number amounts to the length of other non-variable formatted strings below
 				(strncmp(cmdlargs, "tmux", ARGMAX) != 0)
 				       	? snprintf(buf, ttab_entry_size, "ppid:%d cwd:%s cmdlargs:<%s>\n", ppid, cwd, cmdlargs)
@@ -301,22 +302,28 @@ void get_proc_info_cttabs(int cfg_fd, PIDInfo shell, PIDInfoArr *child, enum act
 					int fd;
 
 					tmux_panes_arr = split(iprogram_metadata, '\n', tmux_pane_count, 0);
-					snprintf(path, PATH_MAX, "%s/.tbmark-cfg", get_homedir_of_user(getuid()));
-					ASSERT_EXIT((fd = cfg_open(path)) != -1);
+
+                                        /* Obtain full path of tbmark config file, we do it this way since the config file's name may be user-defined */
+                                        snprintf(cfg_fdpath, 22, "/proc/self/fd/%d", cfg_fd);
+                                        readlink(cfg_fdpath, cfgpath, PATH_MAX);
+
+                                        /* Open the config file for appending tmux data */
+					ASSERT_EXIT((fd = cfg_open(cfgpath)) != -1);
 					memset(&cfg, 0, IPROG_INFO_SIZE);
 					ASSERT_EXIT(read(fd, cfg, IPROG_INFO_SIZE) != -1);
+
 					tbmark_cfg_entries = split(cfg, '\n', TBMARK_PROG_MAX, &tbmark_cfg_entries_len);
 
 					for (int j = 0; j < tmux_pane_count; j++) {
-						for (int x = 0; x < tbmark_cfg_entries_len; x++) {
-							if (strstr(tbmark_cfg_entries[x], "ppid:") != NULL) {
+						for (int k = 0; k < tbmark_cfg_entries_len; k++) {
+							if (strstr(tbmark_cfg_entries[k], "ppid:") != NULL) {
 								char *tmux_panes_arr_pid = extract_tbm_entry_field_str(tmux_panes_arr[j], 16, "pane_pid:");
-								char *tbmark_cfg_entries_pid = extract_tbm_entry_field_str(tbmark_cfg_entries[x], 12, "ppid:");
+								char *tbmark_cfg_entries_pid = extract_tbm_entry_field_str(tbmark_cfg_entries[k], 12, "ppid:");
 
-								/* Only append tmux pane programs in most recently selected window */
+								/* NOTE: Only tmux pane programs in the most recently selected window will be appended (ONE tmux window ONLY) */
 								if (strncmp(tmux_panes_arr_pid, tbmark_cfg_entries_pid, 7) == 0) {
 									snprintf(tmux_buf, IPROG_INFO_SIZE, "%s [tmux] %s\n", 
-											tbmark_cfg_entries[x] + (6 + strnlen(tbmark_cfg_entries_pid, 7)), 
+											tbmark_cfg_entries[k] + (6 + strnlen(tbmark_cfg_entries_pid, 7)), 
 											tmux_panes_arr[j] + (10 + strnlen(tbmark_cfg_entries_pid, 7)));
 									strncat(buf, tmux_buf, strnlen(tmux_buf, IPROG_INFO_SIZE));
 								}
@@ -356,7 +363,7 @@ int write_proc_stdin(pid_t pid, const char *cmd, size_t cmd_len) {
 
 	/* Check if stdin of `pid` is ready to be written to */
 	// NOTE: Running `tbmark open` with strace returns a -ENOTTY since input doesn't come from a terminal
-	select_ret = select(fd+1, NULL, &rfds, NULL, NULL);
+	select_ret = select(fd + 1, NULL, &rfds, NULL, NULL);
 	ASSERT_EXIT(select_ret != -1);
 
        	if (FD_ISSET(fd, &rfds)) {

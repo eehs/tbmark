@@ -3,6 +3,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <sys/types.h>
+#include <sys/stat.h>
 #include <unistd.h>
 #include <regex.h>
 
@@ -37,7 +38,7 @@ int tbm_index(const char *subcmd) {
 
 int tbm_save(const char *shell) {
 	pid_t ppid;
-	char cfgpath[PATH_MAX];
+	char cfgdir[PATH_MAX - FILE_NAME_MAX_LEN], cfgpath[PATH_MAX];
 	int cfg_fd;
 	
 	/* Parent PID needed to identify terminal program */
@@ -45,11 +46,13 @@ int tbm_save(const char *shell) {
 	printf("Saving open tabs...\n");
 
 	/* Create config file and start logging terminal info to it */
-	snprintf(cfgpath, PATH_MAX, "%s/.tbmark-cfg", get_homedir_of_user(getuid()));
+        snprintf(cfgdir, PATH_MAX - FILE_NAME_MAX_LEN, "%s/%s", get_homedir_of_user(getuid()), TBMARK_DIRNAME);
+        mkdir(cfgdir, 0777);
+
+	snprintf(cfgpath, PATH_MAX, "%s/tbmark.cfg", cfgdir);
 	ASSERT_RET((cfg_create(cfgpath)) != -1);
 	ASSERT_RET((cfg_fd = cfg_open(cfgpath)) != -1);
 
-	// TODO: I should pass `ttabs` to functions in the process scraping hierarchy by reference, so I'm able to free it properly afterwards
 	/* Scraping and parsing of process data starts here */
 	PIDInfoArr *ttabs;
 	ASSERT_RET(get_terminal_emu_and_proc_info(&ttabs, cfg_fd, ppid, TBM_RDWR_PIDINFO | TBM_SKIP_CURRENT_PID) != -1);
@@ -97,8 +100,8 @@ int tbm_open(const char *shell) {
         }
 
         /* Open and parse tbmark config file for program restoration */
-        snprintf(cfgpath, strnlen(userhome, PATH_MAX)+13, "%s/.tbmark-cfg", userhome);
-	ASSERT_RET((cfg_fd = cfg_open(cfgpath)) != -1);
+        snprintf(cfgpath, PATH_MAX + FILE_NAME_MAX_LEN, "%s/%s/tbmark.cfg", userhome, TBMARK_DIRNAME);
+        ASSERT_RET((cfg_fd = cfg_open(cfgpath)) != -1);
 	ASSERT_RET((cfg_prog_entry_list = cfg_parse(cfg_fd)) != NULL);
 	ASSERT_RET(cfg_exec(cfg_fd, ppid, cfg_prog_entry_list) != -1);
 
@@ -112,7 +115,7 @@ int tbm_open(const char *shell) {
 int tbm_delete(const char *shell) {
 	char cfgpath[PATH_MAX];
 
-	snprintf(cfgpath, PATH_MAX, "%s/.tbmark-cfg", get_homedir_of_user(getuid()));
+	snprintf(cfgpath, PATH_MAX, "%s/%s/tbmark.cfg", get_homedir_of_user(getuid()), TBMARK_DIRNAME);
 	cfg_delete(cfgpath);
 	printf("Deleting %s\n", cfgpath);
 
@@ -124,6 +127,7 @@ void tbm_help() {
 	exit(-1);
 }
 
+// TODO: Allow users to save and open different tbmark config files, current behaviour just overwrites the same file each time `save` and `open` runs
 int main(int argc, char **argv) {
 	int tbm_command;
 	char shell[TBMARK_PROG_MAX];
@@ -136,7 +140,7 @@ int main(int argc, char **argv) {
 		return 0;
 	} 
 
-	printf("Usage: tbmark [command] <config file>\n\nList of available commands:\n");
+	printf("Usage: tbmark [command]\n\nList of available commands:\n");
 	tbm_help();
 
 	return -1;
