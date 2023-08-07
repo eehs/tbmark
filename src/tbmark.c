@@ -15,6 +15,8 @@
 
 #define NUM_CAPABILITIES 1
 
+// TODO: Error messages can be more helpful
+// TODO: Record a live capture of tbmark in action
 // TODO: Make memory deallocations explicit (on crashes and exits)
 // TODO: Make tbmark aware of piped programs
 // TODO: Add some form of testing (different scenarios, e.g., multiple terminal tabs, CLI arguments with space characters, etc)
@@ -36,7 +38,7 @@ int tbm_index(const char *subcmd) {
 	return -1;
 }
 
-int tbm_save(const char *shell) {
+int tbm_save(const char *shell, const char *filename) {
 	pid_t ppid;
 	char cfgdir[PATH_MAX - FILE_NAME_MAX_LEN], cfgpath[PATH_MAX];
 	int cfg_fd;
@@ -49,7 +51,11 @@ int tbm_save(const char *shell) {
         snprintf(cfgdir, PATH_MAX - FILE_NAME_MAX_LEN, "%s/%s", get_homedir_of_user(getuid()), TBMARK_DIRNAME);
         mkdir(cfgdir, 0777);
 
-	snprintf(cfgpath, PATH_MAX, "%s/tbmark.cfg", cfgdir);
+        if (filename != NULL) {
+        	snprintf(cfgpath, PATH_MAX, "%s/%s.cfg", cfgdir, filename);
+        } else {
+        	snprintf(cfgpath, PATH_MAX, "%s/tbmark.cfg", cfgdir);
+        }
 	ASSERT_RET((cfg_create(cfgpath)) != -1);
 	ASSERT_RET((cfg_fd = cfg_open(cfgpath)) != -1);
 
@@ -70,7 +76,7 @@ int tbm_save(const char *shell) {
 }
 
 /* Must be executed with root privileges (direct injection to process stdin) */
-int tbm_open(const char *shell) {
+int tbm_open(const char *shell, const char *filename) {
 	pid_t ppid;
 	char cwd[PATH_MAX];
         regex_t userhome_regex;
@@ -100,7 +106,14 @@ int tbm_open(const char *shell) {
         }
 
         /* Open and parse tbmark config file for program restoration */
-        snprintf(cfgpath, PATH_MAX + FILE_NAME_MAX_LEN, "%s/%s/tbmark.cfg", userhome, TBMARK_DIRNAME);
+        if (filename != NULL) {
+                char *cfg_ext_in_filename = strstr(filename, ".cfg");
+                char *dot_cfg_str_extension = (cfg_ext_in_filename != NULL) ? "" : ".cfg";
+                
+                snprintf(cfgpath, PATH_MAX  + FILE_NAME_MAX_LEN, "%s/%s/%s%s", userhome, TBMARK_DIRNAME, filename, dot_cfg_str_extension);
+        } else {
+                snprintf(cfgpath, PATH_MAX + FILE_NAME_MAX_LEN, "%s/%s/tbmark.cfg", userhome, TBMARK_DIRNAME);
+        }
         ASSERT_RET((cfg_fd = cfg_open(cfgpath)) != -1);
 	ASSERT_RET((cfg_prog_entry_list = cfg_parse(cfg_fd)) != NULL);
 	ASSERT_RET(cfg_exec(cfg_fd, ppid, cfg_prog_entry_list) != -1);
@@ -112,10 +125,15 @@ int tbm_open(const char *shell) {
 	return 0;
 }
 
-int tbm_delete(const char *shell) {
+int tbm_delete(const char *shell, const char *filename) {
 	char cfgpath[PATH_MAX];
 
-	snprintf(cfgpath, PATH_MAX, "%s/%s/tbmark.cfg", get_homedir_of_user(getuid()), TBMARK_DIRNAME);
+        if (filename != NULL) {
+        	snprintf(cfgpath, PATH_MAX, "%s/%s/%s.cfg", get_homedir_of_user(getuid()), TBMARK_DIRNAME, filename);
+        } else {
+        	snprintf(cfgpath, PATH_MAX, "%s/%s/tbmark.cfg", get_homedir_of_user(getuid()), TBMARK_DIRNAME);
+        }
+
 	cfg_delete(cfgpath);
 	printf("Deleting %s\n", cfgpath);
 
@@ -127,20 +145,19 @@ void tbm_help() {
 	exit(-1);
 }
 
-// TODO: Allow users to save and open different tbmark config files, current behaviour just overwrites the same file each time `save` and `open` runs
 int main(int argc, char **argv) {
 	int tbm_command;
-	char shell[TBMARK_PROG_MAX];
+	char shell[MAX_TBMARK_TABS];
 
-	tbm_exec_name = argv[0];
 	tbm_command = tbm_index(argv[1]);
+        if (tbm_command != -1) {
+                if (argc == 2) tbm_func_table[tbm_command](shell, NULL);
+        	else if (argc == 3) tbm_func_table[tbm_command](shell, argv[2]);
 
-	if (argc == 2 && tbm_command != -1) {
-		tbm_func_table[tbm_command](shell);
-		return 0;
-	} 
+                return 0;
+        }
 
-	printf("Usage: tbmark [command]\n\nList of available commands:\n");
+	printf("Usage: tbmark [subcommand] <config file> (defaults to 'tbmark.cfg' if left empty)\n\nList of available commands:\n");
 	tbm_help();
 
 	return -1;
