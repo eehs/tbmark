@@ -14,7 +14,7 @@
 
 #define INTERACTIVE_PROGRAMS_COUNT 1
 #define TBMARK_SINGLE_ENTRY_SIZE 4096
-#define TBMARK_PROG_MAX 20
+#define MAX_TBMARK_TABS 20
 
 enum action {
 	/* Flags for omitting debug output */

@@ -312,7 +312,7 @@ void get_proc_info_cttabs(int cfg_fd, PIDInfo shell, PIDInfoArr *child, enum act
 					memset(&cfg, 0, IPROG_INFO_SIZE);
 					ASSERT_EXIT(read(fd, cfg, IPROG_INFO_SIZE) != -1);
 
-					tbmark_cfg_entries = split(cfg, '\n', TBMARK_PROG_MAX, &tbmark_cfg_entries_len);
+					tbmark_cfg_entries = split(cfg, '\n', MAX_TBMARK_TABS, &tbmark_cfg_entries_len);
 
 					for (int j = 0; j < tmux_pane_count; j++) {
 						for (int k = 0; k < tbmark_cfg_entries_len; k++) {
@@ -332,7 +332,7 @@ void get_proc_info_cttabs(int cfg_fd, PIDInfo shell, PIDInfoArr *child, enum act
 							}
 						}
 					}
-					free_str_arr(tbmark_cfg_entries, TBMARK_PROG_MAX);
+					free_str_arr(tbmark_cfg_entries, MAX_TBMARK_TABS);
 					free_str_arr(tmux_panes_arr, tmux_pane_count);
 				}
 				free(tmux_server_metadata);
