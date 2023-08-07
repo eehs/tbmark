@@ -116,7 +116,7 @@ int cfg_open(const char *pathname) {
 	int cfg_fd;
 
 	cfg_fd = open(pathname, O_RDWR);
-	ASSERT_RET(cfg_fd != -1);
+	ASSERT_EXIT(cfg_fd != -1);
 
 	return cfg_fd;
 }
