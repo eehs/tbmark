@@ -13,9 +13,6 @@
 #include "helpers.h"
 #include "debug.h"
 
-#define NUM_CAPABILITIES 1
-
-// TODO: Error messages can be more helpful
 // TODO: Record a live capture of tbmark in action
 // TODO: Make memory deallocations explicit (on crashes and exits)
 // TODO: Make tbmark aware of piped programs
@@ -114,9 +111,17 @@ int tbm_open(const char *shell, const char *filename) {
         } else {
                 snprintf(cfgpath, PATH_MAX + FILE_NAME_MAX_LEN, "%s/%s/tbmark.cfg", userhome, TBMARK_DIRNAME);
         }
-        ASSERT_RET((cfg_fd = cfg_open(cfgpath)) != -1);
+
+        cfg_fd = cfg_open(cfgpath);
 	ASSERT_RET((cfg_prog_entry_list = cfg_parse(cfg_fd)) != NULL);
-	ASSERT_RET(cfg_exec(cfg_fd, ppid, cfg_prog_entry_list) != -1);
+
+	if (cfg_exec(cfg_fd, ppid, cfg_prog_entry_list) == -1) {
+                free(cfg_prog_entry_list->entries);
+                free(cfg_prog_entry_list);
+                close(cfg_fd);
+
+                return -1;
+        }
 
 	free(cfg_prog_entry_list->entries);
 	free(cfg_prog_entry_list);
@@ -129,7 +134,10 @@ int tbm_delete(const char *shell, const char *filename) {
 	char cfgpath[PATH_MAX];
 
         if (filename != NULL) {
-        	snprintf(cfgpath, PATH_MAX, "%s/%s/%s.cfg", get_homedir_of_user(getuid()), TBMARK_DIRNAME, filename);
+                char *cfg_ext_in_filename = strstr(filename, ".cfg");
+                char *dot_cfg_str_extension = (cfg_ext_in_filename != NULL) ? "" : ".cfg";
+                
+                snprintf(cfgpath, PATH_MAX, "%s/%s/%s%s", get_homedir_of_user(getuid()), TBMARK_DIRNAME, filename, dot_cfg_str_extension);
         } else {
         	snprintf(cfgpath, PATH_MAX, "%s/%s/tbmark.cfg", get_homedir_of_user(getuid()), TBMARK_DIRNAME);
         }
@@ -148,11 +156,13 @@ void tbm_help() {
 int main(int argc, char **argv) {
 	int tbm_command;
 	char shell[MAX_TBMARK_TABS];
+        char filename[FILE_NAME_MAX_LEN];
 
 	tbm_command = tbm_index(argv[1]);
+        strncpy(filename, argv[2], FILE_NAME_MAX_LEN);
         if (tbm_command != -1) {
                 if (argc == 2) tbm_func_table[tbm_command](shell, NULL);
-        	else if (argc == 3) tbm_func_table[tbm_command](shell, argv[2]);
+        	else if (argc == 3) tbm_func_table[tbm_command](shell, filename);
 
                 return 0;
         }
