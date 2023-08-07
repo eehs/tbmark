@@ -88,7 +88,9 @@ char *strip_args_from_cmd(const char *cmd, size_t max_cmd_len) {
 
         regfree(&strip_delim_regex);
         if (status == 0) {
-                for (int i = strip_delim_index.rm_so, j = 0; i < strip_delim_index.rm_eo-1; i++, j++) {
+                for (int i = strip_delim_index.rm_so, j = 0;
+                                i < (strip_delim_index.rm_eo - 1); 
+                                i++, j++) {
                         stripped[j] = cmd[i];
                 }
         }
@@ -97,7 +99,6 @@ char *strip_args_from_cmd(const char *cmd, size_t max_cmd_len) {
 }
 
 int cfg_create(const char *pathname) {
-	 // TODO: Could definitely name saved configs after current time and date, etc instead of just overwriting it every single time (possibly rewrite `cfg_open` and `cfg_delete`, so that the tbmark config files can be dynamically located)
         int res = open(pathname, O_CREAT | O_TRUNC, S_IRUSR | S_IWUSR);
         ASSERT_RET(res != -1);
 
@@ -249,7 +250,8 @@ int cfg_exec(int fd, pid_t ppid, CfgInfoArr *cfginfo_list) {
 	}
 
 	/* t (index for all tbmark entries), i (index for iprogram-specific windows/structures only), r (index for regular programs only) */
-	for (int t = 0, i = 0, r = 0; t < cfginfo_list->entries_len; t++) {
+	for (int t = 0, i = 0, r = 0; 
+                        t < cfginfo_list->entries_len; t++) {
 		/* `iprogram` tabs are formatted here + iprogram-specific metadata assignment to their respective variables */
 		if (strnlen(cfginfo_list->entries[t].iprogram_name, MAX_COMM_LEN) > 0) {
 			printf(" ↳ %s %d (%s): \"%s", iprogram_glossary[cfginfo_list->entries[t].iprogram_index], i + 1, cfginfo_list->entries[t].cwd, cfginfo_list->entries[t].comm);
@@ -269,7 +271,7 @@ int cfg_exec(int fd, pid_t ppid, CfgInfoArr *cfginfo_list) {
 			r++;
 
 			/* Switch-case below is used for obtaining `iprogram` metadata */
-			switch(is_iprogram(cfginfo_list->entries[t].comm)) {
+			switch (is_iprogram(cfginfo_list->entries[t].comm)) {
 				case 0:
 					tmux_socket_path = extract_tbm_entry_field_str(cfginfo_list->entries[t].metadata, PATH_MAX + 12, "socket_path:"); 
 					tmux_pane_count = extract_tbm_entry_field_int(cfginfo_list->entries[t].metadata, 12, "pane_count:"); 
