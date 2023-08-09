@@ -260,7 +260,7 @@ void get_proc_info_cttabs(int cfg_fd, PIDInfo shell, PIDInfoArr *child, enum act
 
 		size_t ttab_entry_size = strnlen(cwd, PATH_MAX) + strnlen(cmdlargs, ARGMAX) + 18;
 		switch (iprogram_index) {
-			case 0:
+			case 0: ;
 				/* tmux is executed before subcommands are ran in their panes/windows */
 				char *tmux_server_metadata;
 				int get_tmux_server_metadata_res;
