@@ -1,5 +1,5 @@
 CFLAGS=-g -Wall -fstack-protector-strong -Wno-error
-CLIBS=-lxdo -lcap -Wl,--gc-sections
+CLIBS=-lxdo -Wl,--gc-sections
 SRC_DIR=src
 IPROGRAMS_DIR=$(SRC_DIR)/iprograms
 OBJ_DIR=obj
