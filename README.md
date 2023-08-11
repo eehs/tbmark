@@ -1,6 +1,6 @@
 Terminal BookMARKer
 ===================
-Terminal BookMARKer (abbreviated to just *tbmark*), provides a way of saving opened terminal tabs (*and their commands*) to disk and restoring them upon startup. *tbmark* works exclusively on *Linux* (tested on *x86-64* thus far) by obtaining terminal tab data from the **virtual proc filesystem** when saving tabs. As for the latter, my current solution makes use of [xdotool](https://github.com/jordansissel/xdotool)'s **libxdo** library to fake keyboard input. This is responsible for the creation of new tabs with their respective commands sent directly to a process's stdin. Saved terminal tabs can be found at `~/.tbmark-cfg`.
+Terminal BookMARKer (abbreviated to just *tbmark*), provides a way of saving opened terminal tabs (*and their commands*) to disk and restoring them upon startup. *tbmark* works exclusively on *Linux* (tested on *x86-64* thus far) by obtaining terminal tab data from the **virtual proc filesystem** when saving tabs. As for the latter, my current solution makes use of [xdotool](https://github.com/jordansissel/xdotool)'s **libxdo** library to fake keyboard input. This is responsible for the creation of new tabs with their respective commands sent directly to a process's stdin. Saved terminal tabs can be found at `~/.tbmark/`.
 
 The main motivation behind this project was to boost productivity since my workflow usually involves multiple opened tabs, and of course, learning purposes :)
 
