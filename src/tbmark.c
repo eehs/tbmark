@@ -158,11 +158,13 @@ int main(int argc, char **argv) {
 	char shell[MAX_TBMARK_TABS];
         char filename[FILE_NAME_MAX_LEN];
 
-	tbm_command = tbm_index(argv[1]);
-        strncpy(filename, argv[2], FILE_NAME_MAX_LEN);
+        tbm_command = tbm_index(argv[1]);
         if (tbm_command != -1) {
                 if (argc == 2) tbm_func_table[tbm_command](shell, NULL);
-        	else if (argc == 3) tbm_func_table[tbm_command](shell, filename);
+                else if (argc == 3) {
+                        strncpy(filename, argv[2], FILE_NAME_MAX_LEN);
+                        tbm_func_table[tbm_command](shell, filename);
+                }
 
                 return 0;
         }
