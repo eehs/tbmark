@@ -20,7 +20,7 @@ Installation
 Usage
 =====
 ```
- ./tbmark
+ ./tbmark <subcommand> <config file (optional)>
 ➥ save: Saves currently opened terminal tabs to a file (excluding tab where tbmark was ran)
 ➥ open: Opens saved tabs from a tbmark config file
 ➥ delete: Deletes a tbmark config file
