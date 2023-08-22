@@ -16,10 +16,10 @@
 #define TBMARK_SINGLE_ENTRY_SIZE 4096
 #define MAX_TBMARK_TABS 20
 
-enum action {
+enum tbm_flags {
 	/* Flags for omitting debug output */
 	TBM_SILENT = 1,
-	TBM_RDONLY_PIDINFO = 2, // This bit flag isn't actually used anywhere, but solely exists for explicity purposes
+	TBM_RDONLY_PIDINFO = 2, // This bit flag isn't tbm_flagsually used anywhere, but solely exists for explicity purposes
 	TBM_RDWR_PIDINFO = 4,
 
 	/* Option to skip current PID when obtaining process info of terminal tabs (Since `get_proc_info_ttabs` will be reused, we don't always want to skip the PID of the current terminal) */
@@ -43,15 +43,15 @@ typedef struct {
 	bool has_children;
 } PIDInfoArr;
 
-int get_proc_stat(pid_t pid, PIDInfo *pibuf);
-int get_proc_cmdargs(pid_t pid, PIDInfo *pibuf);
-int get_proc_info(pid_t pid, PIDInfo *pibuf);
-int get_terminal_emu_and_proc_info(PIDInfoArr **ttabs, int cfg_fd, pid_t ppid, enum action act);
+int get_proc_stat(pid_t pid, PIDInfo *status_result);
+int get_proc_cmdargs(pid_t pid, PIDInfo *cmdargs_result);
+int get_proc_info(pid_t pid, PIDInfo *result);
+int get_terminal_emu_and_proc_info(PIDInfoArr **ttabs, int cfg_fd, pid_t ppid, enum tbm_flags flags);
 int getpid_of_tabs(PIDInfoArr **ttabs, pid_t ppid, pid_t mypid);
 /* PID of terminal and shell processes */
-int get_proc_info_ttabs(PIDInfoArr **ttabs, int cfg_fd, pid_t term_pid, pid_t ppid, enum action act);
-/* PID of the actual programs running in a shell */
-void get_proc_info_cttabs(int cfg_fd, PIDInfo shell, PIDInfoArr *child, enum action act);
+int get_proc_info_ttabs(PIDInfoArr **ttabs, int cfg_fd, pid_t term_pid, pid_t ppid, enum tbm_flags flags);
+/* PID of the tbm_flagsual programs running in a shell */
+void get_proc_info_cttabs(int cfg_fd, PIDInfo shell, PIDInfoArr *child, enum tbm_flags flags);
 int write_proc_stdin(pid_t pid, const char *cmd, size_t cmd_len);
 
 #endif // _PROC_HEADER

@@ -104,7 +104,7 @@ char **split(char *str, char delim, size_t max_arr_len, size_t *out_arr_len) {
                                 if (out_arr_len != 0) {
 					*out_arr_len += 1;
 				}
-                                str += j+1;
+                                str += (j + 1);
                                 break;
                         } else {
 				buf[pos++] = str[j];
@@ -117,6 +117,7 @@ char **split(char *str, char delim, size_t max_arr_len, size_t *out_arr_len) {
         return arr;
 }
 
+// NOTE: Kind of a hacky way to cleanup the tbmark config file (only used there)
 /* Remove lines from a file that match the provided delimeter at the start of each line */
 int remove_lines_from_file(char *path, char *delim, size_t max_file_size) {
         int read_fd, write_fd;
@@ -153,7 +154,6 @@ int remove_lines_from_file(char *path, char *delim, size_t max_file_size) {
 			}
 		}
 	}
-
         ASSERT_RET(cfg_write(write_fd, updated_entries, strnlen(updated_entries, max_file_size)) != -1);
 
 	free_str_arr(entries_arr, lines);

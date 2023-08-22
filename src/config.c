@@ -17,19 +17,19 @@
 
 //#define DEBUG
 
-char *extract_tbm_entry_field_str(const char *buf, size_t tag_and_value_len, char *tag) {
+char *extract_tbm_entry_field_str(const char *buf, size_t max_tag_and_value_len, char *tag) {
 	char *substr_ptr = strstr(buf, tag);
-	char *field_value = calloc(tag_and_value_len, sizeof(char));
+	char *field_value = calloc(max_tag_and_value_len, sizeof(char));
 	int tag_len = strnlen(tag, MAX_TAG_LEN);
 
 	/* Tagged substring exists in `buf` */
 	if (substr_ptr != NULL) {
 		/* String that comes after tag is stored in `field_value` */
-	        snprintf(field_value, tag_and_value_len, "%.*s\n", 
-				(int)strnlen(substr_ptr, tag_and_value_len) - tag_len,
+	        snprintf(field_value, max_tag_and_value_len, "%.*s\n", 
+				(int)strnlen(substr_ptr, max_tag_and_value_len) - tag_len,
 				substr_ptr + tag_len);
 
-		for (int i = 0; i < strnlen(field_value, tag_and_value_len); i++) {
+		for (int i = 0; i < strnlen(field_value, max_tag_and_value_len); i++) {
         		/* Stop string at current element if we hit a newline character, OR if the supplied tags != [cmdlargs, tmux, and if a whitespace character was hit] */
         		if (field_value[i] == '\n' || (strncmp(tag, "cmdlargs:", 9) != 0 && strncmp(tag, "[tmux] ", 6) != 0 && field_value[i] == ' ')) {
 	        		field_value[i] = '\0';
@@ -43,21 +43,21 @@ char *extract_tbm_entry_field_str(const char *buf, size_t tag_and_value_len, cha
 	return NULL;
 }
 
-int extract_tbm_entry_field_int(const char *buf, size_t tag_and_value_len, char *tag) {
+int extract_tbm_entry_field_int(const char *buf, size_t max_tag_and_value_len, char *tag) {
 	char *substr_ptr = strstr(buf, tag);
-	char *field_value = calloc(tag_and_value_len, sizeof(char));
+	char *field_value = calloc(max_tag_and_value_len, sizeof(char));
 	int field_value_int;
 	int tag_len = strnlen(tag, MAX_TAG_LEN);
 
 	/* String that comes after tag is stored in `field_value` */
-        snprintf(field_value, tag_and_value_len, "%.*s\n", 
-			(int)strnlen(substr_ptr, tag_and_value_len) - tag_len,
+        snprintf(field_value, max_tag_and_value_len, "%.*s\n", 
+			(int)strnlen(substr_ptr, max_tag_and_value_len) - tag_len,
 			substr_ptr + tag_len);
 
 	/* Tagged substring exists in `buf` */
 	if (substr_ptr != NULL) {
-		for (int i = 0; i < strnlen(field_value, tag_and_value_len); i++) {
-			/* Generic formatting and cleanup of the matched `field_value`, since it may contain stray newline and whitespace characters (we don't want these characters when writing to `tbmark-cfg`) */
+		for (int i = 0; i < strnlen(field_value, max_tag_and_value_len); i++) {
+			/* Generic formatting and cleanup of the matched `field_value`, since it may contain stray newline and whitespace characters (we don't want these characters when writing to our tbmark config file) */
 			if (field_value[i] == '\n' || (strncmp(tag, "cmdlargs:", 9) != 0 && field_value[i] == ' ')) {
 				field_value[i] = '\0';
 				break;

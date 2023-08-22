@@ -13,8 +13,8 @@
 #include "config.h"
 #include "helpers.h"
 
-int get_proc_stat(pid_t pid, PIDInfo *pibuf) {
-	char buf[1024];
+int get_proc_stat(pid_t pid, PIDInfo *status_result) {
+	char procfs_status_buf[1024];
 	char stat_path[PATH_MAX], cwd_path[PATH_MAX];
 	int statfd, bytes_read, items;
 	int getcwd_res;
@@ -23,23 +23,23 @@ int get_proc_stat(pid_t pid, PIDInfo *pibuf) {
 	statfd = open(stat_path, O_RDONLY);
 	ASSERT_RET(statfd != -1);
 
-	memset(buf, 0, sizeof(buf));
-	bytes_read = read(statfd, buf, sizeof(buf));
+	memset(procfs_status_buf, 0, sizeof(procfs_status_buf));
+	bytes_read = read(statfd, procfs_status_buf, sizeof(procfs_status_buf));
 	if (bytes_read < 0) {
 		close(statfd);
 		ASSERT_RET(false);
 	}
 
-	items = sscanf(buf, "%d (%16[^)]) %c %d %d %d %lu", 
-			&pibuf->pid, pibuf->comm, &pibuf->state,
-			&pibuf->ppid, &pibuf->sid, &pibuf->pgid, &pibuf->ctty);
+	items = sscanf(procfs_status_buf, "%d (%16[^)]) %c %d %d %d %lu", 
+			&status_result->pid, status_result->comm, &status_result->state,
+			&status_result->ppid, &status_result->sid, &status_result->pgid, &status_result->ctty);
 	if (items != 7) {
 		close(statfd);
 		ASSERT_RET(false);
 	}
 
 	snprintf(cwd_path, PATH_MAX, "/proc/%d/cwd", pid);
-	getcwd_res = readlink(cwd_path, pibuf->cwd, sizeof(pibuf->cwd));
+	getcwd_res = readlink(cwd_path, status_result->cwd, sizeof(status_result->cwd));
 	if (getcwd_res < 0) {
 		close(statfd);
 		ASSERT_RET(false);
@@ -48,72 +48,72 @@ int get_proc_stat(pid_t pid, PIDInfo *pibuf) {
 	return 0;
 }
 
-int get_proc_cmdargs(pid_t pid, PIDInfo *pibuf) {
-	PIDInfo buf;
+int get_proc_cmdargs(pid_t pid, PIDInfo *cmdargs_result) {
+	PIDInfo procfs_cmdargs_buf;
 	pid_t shell_pid;
 	char extract_cmdargs[PATH_MAX + 100];
 	int extract_cmdargs_res;
 
 	shell_pid = getppid();
-	ASSERT_RET(get_proc_stat(shell_pid, &buf) != -1);
+	ASSERT_RET(get_proc_stat(shell_pid, &procfs_cmdargs_buf) != -1);
 
 	/* Capture output of parsed '/proc/[pid]/cmdline' and store it in `cmdlargs` */
 	snprintf(extract_cmdargs, sizeof(extract_cmdargs), "tr '\\0' ' ' < /proc/%d/cmdline", pid);
 
-	extract_cmdargs_res = exec_and_capture_output(extract_cmdargs, pibuf->cmdlargs);
+	extract_cmdargs_res = exec_and_capture_output(extract_cmdargs, cmdargs_result->cmdlargs);
 	ASSERT_RET(extract_cmdargs_res != -1);
 
 	return 0;
 }
 
-int get_proc_info(pid_t pid, PIDInfo *pibuf) {
-	ASSERT_RET(get_proc_stat(pid, pibuf) != -1);
-	ASSERT_RET(get_proc_cmdargs(pid, pibuf) != -1);
+int get_proc_info(pid_t pid, PIDInfo *result) {
+	ASSERT_RET(get_proc_stat(pid, result) != -1);
+	ASSERT_RET(get_proc_cmdargs(pid, result) != -1);
 
 	return 0;
 }
 
-int get_terminal_emu_and_proc_info(PIDInfoArr **ttabs, int cfg_fd, pid_t ppid, enum action act) {
+int get_terminal_emu_and_proc_info(PIDInfoArr **ttabs, int cfg_fd, pid_t ppid, enum tbm_flags flags) {
 	PIDInfo shell_pinfo, terminal_pinfo, real_pinfo;
 
 	ASSERT_RET(get_proc_stat(ppid, &shell_pinfo) != -1);
 	ASSERT_RET(get_proc_stat(shell_pinfo.ppid, &terminal_pinfo) != -1);
 
-	/* If program is ran with superuser priviledges (sudo), we traverse one level deeper into the process tree */
+	/* If program is ran with superuser privileges (sudo), we traverse one level deeper in the process tree */
 	if (getuid() != 0) {
-		if (~act & TBM_SILENT) {
+		if (~flags & TBM_SILENT) {
 			printf("\nTerminal Emulator: %s (%d)\n", terminal_pinfo.comm, terminal_pinfo.pid);
 		}
 
-		return get_proc_info_ttabs(ttabs, cfg_fd, terminal_pinfo.pid, ppid, act);
+		return get_proc_info_ttabs(ttabs, cfg_fd, terminal_pinfo.pid, ppid, flags);
 	} else {
 		ASSERT_RET(get_proc_stat(terminal_pinfo.ppid, &real_pinfo) != -1);
 
-		return get_proc_info_ttabs(ttabs, cfg_fd, real_pinfo.ppid, real_pinfo.pid, act);
+		return get_proc_info_ttabs(ttabs, cfg_fd, real_pinfo.ppid, real_pinfo.pid, flags);
 	}
 }
 
-/* Excluding PID of tab where script was ran (function isn't called directly normally, but instead used as a wrapper in `get_proc_info_ttabs` and `get_proc_info_cttabs`)  */
+/* Excluding PID of tab where script was ran (function isn't called directly normally, but instead used as a wrapper in `get_proc_info_ttabs` and `get_proc_info_cttabs`) [cpid = child PID] */
 int getpid_of_tabs(PIDInfoArr **ttabs, pid_t ppid, pid_t mypid) {
-	char buf[1024];
-	char children_path[PATH_MAX];
-	int childrenfd, bytes_read;
+	char procfs_cpid_path[PATH_MAX], procfs_cpid_data[1024];
+	int childpid_fd, bytes_read;
 
 	/* Get child PIDs given their parent PID */
-	snprintf(children_path, PATH_MAX, "/proc/%d/task/%d/children", ppid, ppid);
-	childrenfd = open(children_path, O_RDONLY);
-	ASSERT_RET(childrenfd != -1);
+	snprintf(procfs_cpid_path, PATH_MAX, "/proc/%d/task/%d/children", ppid, ppid);
+	childpid_fd = open(procfs_cpid_path, O_RDONLY);
+	ASSERT_RET(childpid_fd != -1);
 
-	bytes_read = read(childrenfd, buf, sizeof(buf));
+	bytes_read = read(childpid_fd, procfs_cpid_data, sizeof(procfs_cpid_data));
 	ASSERT_RET(bytes_read >= 0);
 
 	/* Buffer holding precisely right amount of bytes from `/proc/[ppid]/task/[ppid]/children` */
-	char cpid_buf[bytes_read];
-	strncpy(cpid_buf, buf, bytes_read);
+	char childpid_buf[bytes_read];
+	strncpy(childpid_buf, procfs_cpid_data, bytes_read);
 
-	/* Split `cpid_buf` into substrings and append children PID to yet another placeholder buf */
-	char *temp = cpid_buf;
-	// The third argument saveptr is a pointer to a char * 
+	/* Split `childpid_buf` into substrings and append the child PIDs to an array (which we will use for future accesses) */
+	char *temp = childpid_buf;
+
+	// The third argument saveptr is a pointer to a (char *)
 	// variable that is used internally by strtok_r() in 
 	// order to maintain context between successive calls
 	// that parse the same string.
@@ -122,15 +122,16 @@ int getpid_of_tabs(PIDInfoArr **ttabs, pid_t ppid, pid_t mypid) {
 	pid_t *childpid_arr = calloc(CHILD_MAX, sizeof(pid_t));
 	ASSERT_RET(*childpid_arr != -1);
 
-	/* Populate the placeholder array for children PIDs */
-	int cparr_index = 0;
+	/* Populate `childpid_arr` with string-split child PIDs done above */
+	int childpid_index = 0;
 	while (childpid != NULL) {
 		char *endptr = NULL;
-		childpid_arr[cparr_index++] = strtoul(childpid, &endptr, 10);
+		childpid_arr[childpid_index++] = strtoul(childpid, &endptr, 10);
 		childpid = strtok_r(temp, " ", &temp);
 	}
 
-        cparr_index = (!cparr_index) ? 1 : cparr_index;
+        /* The default index number, and therefore length of the `childpid_arr` is set to 1 despite being empty. This is done so that terminal tabs not running any program (but reside in a directory) can be saved with tbmark */
+        childpid_index = (!childpid_index) ? 1 : childpid_index;
 
 	*ttabs = calloc(1, sizeof(PIDInfoArr));
 	if (*ttabs == NULL) {
@@ -138,24 +139,24 @@ int getpid_of_tabs(PIDInfoArr **ttabs, pid_t ppid, pid_t mypid) {
 		return -1;
 	}
 
-	int cpid_count = 0;
+	int childpid_count = 0;
 	for (int i = 0; i < CHILD_MAX; i++) {
-		if (childpid_arr[i]) cpid_count++;
+		if (childpid_arr[i]) childpid_count++;
         }
 
 	PIDInfoArr *cttabs = *ttabs;
-	if (cparr_index > 0) {
-		cttabs->pidlist = calloc(cpid_count, sizeof(PIDInfo));
+	if (childpid_index > 0) {
+		cttabs->pidlist = calloc(childpid_count, sizeof(PIDInfo));
 		if (cttabs->pidlist == NULL) {
 			free(childpid_arr);
 			return -1;
 		}
 	}
-	cttabs->pidlist_len = cpid_count;
+	cttabs->pidlist_len = childpid_count;
 	/* Set flag if child pid has any children */
-	cttabs->has_children = (!bytes_read) ? false : true;
+	cttabs->has_children = (!bytes_read) ? false : true; // Only used for formatting when displaying saved terminal tabs (so far)
 
-	/* Skip over PID of current tab and return the rest */
+	/* Skip over current tab (its PID) and return the rest */
 	for (int i = 0, hit_mypid_flag = 0; i < cttabs->pidlist_len; i++) {
         	if (childpid_arr[i] == mypid) {
                 	cttabs->pidlist[i].pid = childpid_arr[i + 1];
@@ -171,24 +172,25 @@ int getpid_of_tabs(PIDInfoArr **ttabs, pid_t ppid, pid_t mypid) {
 	return 0;
 }
 
-int get_proc_info_ttabs(PIDInfoArr **ttabs, int cfg_fd, pid_t term_pid, pid_t ppid, enum action act) {
+int get_proc_info_ttabs(PIDInfoArr **ttabs, int cfg_fd, pid_t term_pid, pid_t ppid, enum tbm_flags flags) {
 	ASSERT_RET(getpid_of_tabs(ttabs, term_pid, ppid) != -1);
 
 	/* A temporary struct `terminal_tabs` is used within this function to avoid deferencing/manipulating data in `ttabs` by accident (which is passed by reference in parent functions) */
 	PIDInfoArr *terminal_tabs = *ttabs;
-	if (act & TBM_SKIP_CURRENT_PID) {
+	if (flags & TBM_SKIP_CURRENT_PID) {
 		terminal_tabs->pidlist_len -= 1;
 	}
 
-	if (~act & TBM_SILENT) {
+	if (~flags & TBM_SILENT) {
 		/* NOTE: PID of current tab is skipped */
 		printf("Child PIDs: %ld\n\nParent\n------\n%d\n", terminal_tabs->pidlist_len, term_pid);
 	}
 
 	/* Processes that all share the terminal emulator's PID as their parent process */
 	for (int i = 0; i < terminal_tabs->pidlist_len; i++) {
-		if (~act & TBM_SILENT)
+		if (~flags & TBM_SILENT) {
 			printf("  \u21b3 ");
+                }
 
 		ASSERT_RET(get_proc_stat(terminal_tabs->pidlist[i].pid, &terminal_tabs->pidlist[i]) != -1);
 
@@ -197,11 +199,11 @@ int get_proc_info_ttabs(PIDInfoArr **ttabs, int cfg_fd, pid_t term_pid, pid_t pp
 		ASSERT_RET(getpid_of_tabs(&cttabs, terminal_tabs->pidlist[i].pid, 0) != -1);
 
 		/* Debug messages shown by default */
-		if (~act & TBM_SILENT) {
+		if (~flags & TBM_SILENT) {
 			printf("%d (%s) [%ld]\n", terminal_tabs->pidlist[i].pid, terminal_tabs->pidlist[i].comm, cttabs->pidlist_len);
 		}
 		
-		get_proc_info_cttabs(cfg_fd, terminal_tabs->pidlist[i], cttabs, act);
+		get_proc_info_cttabs(cfg_fd, terminal_tabs->pidlist[i], cttabs, flags);
 		free(cttabs->pidlist);
 		free(cttabs);
 	}
@@ -214,26 +216,24 @@ int get_proc_info_ttabs(PIDInfoArr **ttabs, int cfg_fd, pid_t term_pid, pid_t pp
 static int indentation_counter = 0;
 
 /* Logging of terminal tab programs reside here */
-void get_proc_info_cttabs(int cfg_fd, PIDInfo shell, PIDInfoArr *child, enum action act) {
+void get_proc_info_cttabs(int cfg_fd, PIDInfo shell, PIDInfoArr *child, enum tbm_flags flags) {
 	char buf[TBMARK_SINGLE_ENTRY_SIZE];
 
-	if (~act & TBM_SILENT) {
+	if (~flags & TBM_SILENT) {
 		if (child->has_children) {
 			for (int i = 0; i <= indentation_counter; i++) {
 				printf("      ");
 			}
 			printf("\u21b3  ");
 		} else 
-			indentation_counter = (!child->has_children) 
-				? 0 
-				: indentation_counter + 1;
+			indentation_counter = (!child->has_children) ? 0 : indentation_counter + 1;
 	}
 
         /* Empty shell tabs running nothing will be saved into the auto-generated config file, alongside existing shell programs */
         pid_t pid = child->pidlist[0].pid;
         pid_t ppid = shell.pid;
         char *cwd = (!pid) ? shell.cwd : child->pidlist[0].cwd;
-        char *cmdlargs = (!pid) ? " ": child->pidlist[0].cmdlargs;
+        char *cmdlargs = (!pid) ? " " : child->pidlist[0].cmdlargs;
 
         if (pid) {
                	get_proc_stat(pid, &child->pidlist[0]);
@@ -241,25 +241,27 @@ void get_proc_info_cttabs(int cfg_fd, PIDInfo shell, PIDInfoArr *child, enum act
         }
 
 	/* Print debug messages by default */
-	if (~act & TBM_SILENT && pid) {
+	if (~flags & TBM_SILENT && pid) {
 		printf("%d (%s)\n", pid, cmdlargs);
 	}
 
 	/* Log to tbmark config file (each 'iprogram' handles their own output formatting) */
-	if (act & TBM_RDWR_PIDINFO) {
+	if (flags & TBM_RDWR_PIDINFO) {
 		int iprogram_index;
 		char *iprogram_metadata = NULL;
 
 		// NOTE: So no infinite loops arise
-		if (~act & TBM_CALLED_FROM_IPROG) {
+		if (~flags & TBM_CALLED_FROM_IPROG) {
 			iprogram_index = is_iprogram(cmdlargs);
-			if (iprogram_index != -1) 
+			if (iprogram_index != -1) {
 				/* All iprogram logger functions must return a buffer containing its program information, which we then use to concatenate to the main tbmark entry buf */
 				iprogram_metadata = iprogram_loggers[iprogram_index](cfg_fd);
+                        }
 		}
 
 		size_t ttab_entry_size = strnlen(cwd, PATH_MAX) + strnlen(cmdlargs, ARGMAX) + 18;
 		switch (iprogram_index) {
+                        // tmux
 			case 0: ;
 				/* tmux is executed before subcommands are ran in their panes/windows */
 				char *tmux_server_metadata;
@@ -290,7 +292,7 @@ void get_proc_info_cttabs(int cfg_fd, PIDInfo shell, PIDInfoArr *child, enum act
 				free(count);
 
 				/* Append tmux pane command and metadata to `buf` */
-				ttab_entry_size = strnlen(cwd, PATH_MAX) + strnlen(cmdlargs, ARGMAX) + 31; // This number amounts to the length of other non-variable formatted strings below
+				ttab_entry_size = strnlen(cwd, PATH_MAX) + strnlen(cmdlargs, ARGMAX) + 31; // This number amounts to the total length of other non-variable formatted strings below
 				(strncmp(cmdlargs, "tmux", ARGMAX) != 0)
 				       	? snprintf(buf, ttab_entry_size, "ppid:%d cwd:%s cmdlargs:<%s>\n", ppid, cwd, cmdlargs)
 					: snprintf(buf, ttab_entry_size + strnlen(tmux_server_metadata, PATH_MAX), "cwd:%s cmdlargs:<%s> (metadata) %s\n", cwd, cmdlargs, tmux_server_metadata);
@@ -361,7 +363,7 @@ int write_proc_stdin(pid_t pid, const char *cmd, size_t cmd_len) {
 	FD_ZERO(&rfds);
 	FD_SET(fd, &rfds);
 
-	/* Check if stdin of `pid` is ready to be written to */
+	/* Checks if stdin of `pid` is ready to be written to */
 	// NOTE: Running `tbmark open` with strace returns a -ENOTTY since input doesn't come from a terminal
 	select_ret = select(fd + 1, NULL, &rfds, NULL, NULL);
 	ASSERT_EXIT(select_ret != -1);

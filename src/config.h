@@ -9,7 +9,7 @@
 #define ARGMAX 131072
 #define IPROG_INFO_SIZE 1024
 #define MAX_TBMARK_ENTRIES 50
-#define MAX_TAG_LEN 15 // Longest is 'pane_at_bottom:' as of now
+#define MAX_TAG_LEN 15 // Longest tag is 'pane_at_bottom:' (so far)
 
 typedef struct {
 	char cwd[PATH_MAX];
@@ -26,9 +26,9 @@ typedef struct {
 	size_t entries_len;
 } CfgInfoArr;
 
-// Takes in a buffer containing file contents and returns the tbmark entry field
-char *extract_tbm_entry_field_str(const char *buf, size_t tag_and_value_len, char *tag);
-int extract_tbm_entry_field_int(const char *buf, size_t tag_and_value_len, char *tag);
+/* Takes in a buffer containing file contents and returns the tbmark entry field */
+char *extract_tbm_entry_field_str(const char *buf, size_t max_tag_and_value_len, char *tag);
+int extract_tbm_entry_field_int(const char *buf, size_t max_tag_and_value_len, char *tag);
 
 char *strip_args_from_cmd(const char *cmd, size_t max_cmd_len);
 
