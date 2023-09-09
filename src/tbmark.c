@@ -107,9 +107,9 @@ int tbm_open(const char *shell, const char *filename) {
                 char *cfg_ext_in_filename = strstr(filename, ".cfg");
                 char *dot_cfg_str_extension = (cfg_ext_in_filename != NULL) ? "" : ".cfg";
                 
-                snprintf(cfgpath, PATH_MAX  + FILE_NAME_MAX_LEN, "%s/%s/%s%s", userhome, TBMARK_DIRNAME, filename, dot_cfg_str_extension);
+                snprintf(cfgpath, PATH_MAX, "%s/%s/%s%s", userhome, TBMARK_DIRNAME, filename, dot_cfg_str_extension);
         } else {
-                snprintf(cfgpath, PATH_MAX + FILE_NAME_MAX_LEN, "%s/%s/tbmark.cfg", userhome, TBMARK_DIRNAME);
+                snprintf(cfgpath, PATH_MAX, "%s/%s/tbmark.cfg", userhome, TBMARK_DIRNAME);
         }
 
         cfg_fd = cfg_open(cfgpath);

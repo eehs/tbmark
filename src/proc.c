@@ -247,7 +247,7 @@ void get_proc_info_cttabs(int cfg_fd, PIDInfo shell, PIDInfoArr *child, enum tbm
 
 	/* Log to tbmark config file (each 'iprogram' handles their own output formatting) */
 	if (flags & TBM_RDWR_PIDINFO) {
-		int iprogram_index;
+		int iprogram_index = 0;
 		char *iprogram_metadata = NULL;
 
 		// NOTE: So no infinite loops arise

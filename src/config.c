@@ -381,7 +381,7 @@ int cfg_exec(int fd, pid_t ppid, CfgInfoArr *cfginfo_list) {
 						break;
 					
 					case 3: ;
-						TmuxPaneInfo *next_tmux_pane_metadata;
+						TmuxPaneInfo *next_tmux_pane_metadata = NULL;
 						if (cfg_entry_index+1 == cfginfo_list->entries_len) {
 							next_tmux_pane_metadata = populate_tmux_pane_metadata(cfginfo_list->entries[cfg_entry_index].iprogram_info);
 							ASSERT_RET(next_tmux_pane_metadata != NULL);

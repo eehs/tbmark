@@ -10,8 +10,9 @@ Any form of feedback is welcomed!
 
 Installation
 ============
+> Using `clang` to compile is **OPTIONAL**
 ```
- sudo apt-get install libxdo-dev make
+ sudo apt-get install libxdo-dev make clang
  git clone https://github.com/eehs/tbmark.git
  cd tbmark/
  make
