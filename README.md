@@ -10,7 +10,7 @@ Any form of feedback is welcomed!
 
 Installation
 ============
-> Using `clang` to compile is **OPTIONAL**
+> Using `clang` to compile is fully **OPTIONAL** despite it being the default compiler in use
 ```
  sudo apt-get install libxdo-dev make clang
  git clone https://github.com/eehs/tbmark.git
