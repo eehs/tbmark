@@ -16,8 +16,8 @@
 // TODO: Record a live capture of tbmark in action
 // TODO: Make memory deallocations explicit (on crashes and exits)
 // TODO: Make tbmark aware of piped programs
+// TODO: Get tbmark to play nice with commands ran over SSH (could make use of `sshpass` or something similar)
 // TODO: Add some form of testing (different scenarios, e.g., multiple terminal tabs, CLI arguments with space characters, etc)
-// TODO: Support more programs (tmux, etc)
 
 /* Arbitrary length that covers the names of majority shell programs I've came across thus far, may change in the future */
 
