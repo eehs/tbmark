@@ -23,7 +23,7 @@ Installation
 Usage
 =====
 > [!NOTE]
-> CLI programs that fall under tbmark's umbrella are ones that are **interactive** and **long-running**, like `vim`, `less`, `tmux`, and **NOT** `ls`, `grep` and `cat`. The intended behaviour for those 'one-off' programs is to **NOT** save their commands, but instead save the terminal tab's output buffer (still a WIP), which should occur regardless of it being interactive or not.
+> CLI programs that fall under tbmark's umbrella are ones that are **interactive**, like `vim`, `less`, `tmux`, and **NOT** `ls`, `grep` and `cat`. The intended behaviour for those 'one-off' programs is to **NOT** save their commands, but instead save the terminal tab's output buffer (still a WIP), which should occur regardless of it being interactive or not.
 
 ```
  ./tbmark <subcommand> [config file]
