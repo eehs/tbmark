@@ -335,6 +335,7 @@ int cfg_exec(int fd, pid_t ppid, CfgInfoArr *cfginfo_list) {
 					active_pane_id = tmux_pane_id;
 				}
 
+                                size_t saved_comm_len = strnlen(cfginfo_list->entries[cfg_entry_index].comm, MAX_COMM_LEN);
 				switch(tmux_pane_count) {
 					case 2:
 						//  ---------
@@ -346,12 +347,12 @@ int cfg_exec(int fd, pid_t ppid, CfgInfoArr *cfginfo_list) {
 								&& tmux_pane_metadata->at_bottom 
 								&& tmux_pane_metadata->at_left 
 								&& !tmux_pane_metadata->at_right) {
-						        snprintf(OPEN_TBMARK_ENTRIES_CMD, sizeof(OPEN_TBMARK_ENTRIES_CMD), "tmux resize-pane -t %d -x %d -y %d && tmux split-window -h && cd %s && %s %s && clear\n", tmux_pane_id, tmux_pane_metadata->width, tmux_pane_metadata->height, cfginfo_list->entries[cfg_entry_index].cwd, cfginfo_list->entries[cfg_entry_index].comm, cfginfo_list->entries[cfg_entry_index].cmdlargs);
+						        snprintf(OPEN_TBMARK_ENTRIES_CMD, sizeof(OPEN_TBMARK_ENTRIES_CMD), "tmux resize-pane -t %d -x %d -y %d && tmux split-window -h && cd %s && %s %s\n", tmux_pane_id, tmux_pane_metadata->width, tmux_pane_metadata->height, cfginfo_list->entries[cfg_entry_index].cwd, (saved_comm_len == 0) ? "clear" : cfginfo_list->entries[cfg_entry_index].comm, cfginfo_list->entries[cfg_entry_index].cmdlargs);
 						} else if (tmux_pane_metadata->at_top 
 								&& tmux_pane_metadata->at_bottom 
 								&& !tmux_pane_metadata->at_left 
 								&& tmux_pane_metadata->at_right) {
-						        snprintf(OPEN_TBMARK_ENTRIES_CMD, sizeof(OPEN_TBMARK_ENTRIES_CMD), "tmux resize-pane -t %d -x %d -y %d && cd %s && %s %s\n", tmux_pane_id, tmux_pane_metadata->width, tmux_pane_metadata->height, cfginfo_list->entries[cfg_entry_index].cwd, (strnlen(cfginfo_list->entries[cfg_entry_index].comm, MAX_COMM_LEN) == 0) ? "clear" : cfginfo_list->entries[cfg_entry_index].comm, cfginfo_list->entries[cfg_entry_index].cmdlargs);
+						        snprintf(OPEN_TBMARK_ENTRIES_CMD, sizeof(OPEN_TBMARK_ENTRIES_CMD), "tmux resize-pane -t %d -x %d -y %d && cd %s && %s %s\n", tmux_pane_id, tmux_pane_metadata->width, tmux_pane_metadata->height, cfginfo_list->entries[cfg_entry_index].cwd, (saved_comm_len == 0) ? "clear" : cfginfo_list->entries[cfg_entry_index].comm, cfginfo_list->entries[cfg_entry_index].cmdlargs);
 						}
 
 						//  ---------
@@ -363,12 +364,12 @@ int cfg_exec(int fd, pid_t ppid, CfgInfoArr *cfginfo_list) {
 								&& !tmux_pane_metadata->at_bottom 
 								&& tmux_pane_metadata->at_left 
 								&& tmux_pane_metadata->at_right) {
-						        snprintf(OPEN_TBMARK_ENTRIES_CMD, sizeof(OPEN_TBMARK_ENTRIES_CMD), "tmux split-window -v && cd %s && %s %s && clear\n", cfginfo_list->entries[cfg_entry_index].cwd, cfginfo_list->entries[cfg_entry_index].comm, cfginfo_list->entries[cfg_entry_index].cmdlargs);
+						        snprintf(OPEN_TBMARK_ENTRIES_CMD, sizeof(OPEN_TBMARK_ENTRIES_CMD), "tmux split-window -v && cd %s && %s %s\n", cfginfo_list->entries[cfg_entry_index].cwd, (saved_comm_len == 0) ? "clear" : cfginfo_list->entries[cfg_entry_index].comm, cfginfo_list->entries[cfg_entry_index].cmdlargs);
 						} else if (!tmux_pane_metadata->at_top 
 								&& tmux_pane_metadata->at_bottom 
 								&& tmux_pane_metadata->at_left 
 								&& tmux_pane_metadata->at_right) {
-						        snprintf(OPEN_TBMARK_ENTRIES_CMD, sizeof(OPEN_TBMARK_ENTRIES_CMD), "tmux resize-pane -t %d -x %d -y %d && cd %s && %s %s\n", tmux_pane_id, tmux_pane_metadata->width, tmux_pane_metadata->height, cfginfo_list->entries[cfg_entry_index].cwd, (strnlen(cfginfo_list->entries[cfg_entry_index].comm, MAX_COMM_LEN) == 0) ? "clear" : cfginfo_list->entries[cfg_entry_index].comm, cfginfo_list->entries[cfg_entry_index].cmdlargs);
+						        snprintf(OPEN_TBMARK_ENTRIES_CMD, sizeof(OPEN_TBMARK_ENTRIES_CMD), "tmux resize-pane -t %d -x %d -y %d && cd %s && %s %s\n", tmux_pane_id, tmux_pane_metadata->width, tmux_pane_metadata->height, cfginfo_list->entries[cfg_entry_index].cwd, (saved_comm_len == 0) ? "clear" : cfginfo_list->entries[cfg_entry_index].comm, cfginfo_list->entries[cfg_entry_index].cmdlargs);
 						}
 
 						/* Set the active tmux pane */
@@ -403,7 +404,7 @@ int cfg_exec(int fd, pid_t ppid, CfgInfoArr *cfginfo_list) {
 								&& !next_tmux_pane_metadata->at_bottom
 								&& !next_tmux_pane_metadata->at_left
 								&& next_tmux_pane_metadata->at_right) {
-						        snprintf(OPEN_TBMARK_ENTRIES_CMD, sizeof(OPEN_TBMARK_ENTRIES_CMD), "tmux resize-pane -t %d -x %d -y %d && tmux split-window -v && tmux select-pane -t 0 && tmux split-window -h && cd %s && %s %s && clear\n", tmux_pane_id, tmux_pane_metadata->width, tmux_pane_metadata->height, cfginfo_list->entries[cfg_entry_index].cwd, cfginfo_list->entries[cfg_entry_index].comm, cfginfo_list->entries[cfg_entry_index].cmdlargs);
+						        snprintf(OPEN_TBMARK_ENTRIES_CMD, sizeof(OPEN_TBMARK_ENTRIES_CMD), "tmux resize-pane -t %d -x %d -y %d && tmux split-window -v && tmux select-pane -t 0 && tmux split-window -h && cd %s && %s %s\n", tmux_pane_id, tmux_pane_metadata->width, tmux_pane_metadata->height, cfginfo_list->entries[cfg_entry_index].cwd, (saved_comm_len == 0) ? "clear" : cfginfo_list->entries[cfg_entry_index].comm, cfginfo_list->entries[cfg_entry_index].cmdlargs);
 						} else if (tmux_pane_metadata->at_top
 								&& !tmux_pane_metadata->at_bottom
 								&& !tmux_pane_metadata->at_left
@@ -412,12 +413,12 @@ int cfg_exec(int fd, pid_t ppid, CfgInfoArr *cfginfo_list) {
 								&& next_tmux_pane_metadata->at_bottom
 								&& next_tmux_pane_metadata->at_left
 								&& next_tmux_pane_metadata->at_right) {
-							snprintf(OPEN_TBMARK_ENTRIES_CMD, sizeof(OPEN_TBMARK_ENTRIES_CMD), "tmux resize-pane -t %d -x %d -y %d && tmux select-pane -t 2 && cd %s && %s %s && clear\n", tmux_pane_id, tmux_pane_metadata->width, tmux_pane_metadata->height, cfginfo_list->entries[cfg_entry_index].cwd, cfginfo_list->entries[cfg_entry_index].comm, cfginfo_list->entries[cfg_entry_index].cmdlargs);
+							snprintf(OPEN_TBMARK_ENTRIES_CMD, sizeof(OPEN_TBMARK_ENTRIES_CMD), "tmux resize-pane -t %d -x %d -y %d && tmux select-pane -t 2 && cd %s && %s %s\n", tmux_pane_id, tmux_pane_metadata->width, tmux_pane_metadata->height, cfginfo_list->entries[cfg_entry_index].cwd, (saved_comm_len == 0) ? "clear" : cfginfo_list->entries[cfg_entry_index].comm, cfginfo_list->entries[cfg_entry_index].cmdlargs);
 						} else if (!tmux_pane_metadata->at_top
 								&& tmux_pane_metadata->at_bottom
 								&& tmux_pane_metadata->at_left
 								&& tmux_pane_metadata->at_right) {
-							snprintf(OPEN_TBMARK_ENTRIES_CMD, sizeof(OPEN_TBMARK_ENTRIES_CMD), "tmux resize-pane -t %d -x %d -y %d && cd %s && %s %s\n", tmux_pane_id, tmux_pane_metadata->width, tmux_pane_metadata->height, cfginfo_list->entries[cfg_entry_index].cwd, (strnlen(cfginfo_list->entries[cfg_entry_index].comm, MAX_COMM_LEN) == 0) ? "clear" : cfginfo_list->entries[cfg_entry_index].comm, cfginfo_list->entries[cfg_entry_index].cmdlargs);
+							snprintf(OPEN_TBMARK_ENTRIES_CMD, sizeof(OPEN_TBMARK_ENTRIES_CMD), "tmux resize-pane -t %d -x %d -y %d && cd %s && %s %s\n", tmux_pane_id, tmux_pane_metadata->width, tmux_pane_metadata->height, cfginfo_list->entries[cfg_entry_index].cwd, (saved_comm_len == 0) ? "clear" : cfginfo_list->entries[cfg_entry_index].comm, cfginfo_list->entries[cfg_entry_index].cmdlargs);
 						}
 
 						//  ---------
@@ -429,7 +430,7 @@ int cfg_exec(int fd, pid_t ppid, CfgInfoArr *cfginfo_list) {
 								&& !tmux_pane_metadata->at_bottom
 								&& tmux_pane_metadata->at_left
 								&& tmux_pane_metadata->at_right) {
-							snprintf(OPEN_TBMARK_ENTRIES_CMD, sizeof(OPEN_TBMARK_ENTRIES_CMD), "tmux resize-pane -t %d -x %d -y %d && tmux split-window -v && cd %s && %s %s && clear\n", tmux_pane_id, tmux_pane_metadata->width, tmux_pane_metadata->height, cfginfo_list->entries[cfg_entry_index].cwd, cfginfo_list->entries[cfg_entry_index].comm, cfginfo_list->entries[cfg_entry_index].cmdlargs);
+							snprintf(OPEN_TBMARK_ENTRIES_CMD, sizeof(OPEN_TBMARK_ENTRIES_CMD), "tmux resize-pane -t %d -x %d -y %d && tmux split-window -v && cd %s && %s %s\n", tmux_pane_id, tmux_pane_metadata->width, tmux_pane_metadata->height, cfginfo_list->entries[cfg_entry_index].cwd, (saved_comm_len == 0) ? "clear" : cfginfo_list->entries[cfg_entry_index].comm, cfginfo_list->entries[cfg_entry_index].cmdlargs);
 						} else if (!tmux_pane_metadata->at_top
 								&& tmux_pane_metadata->at_bottom
 								&& tmux_pane_metadata->at_left
@@ -438,12 +439,12 @@ int cfg_exec(int fd, pid_t ppid, CfgInfoArr *cfginfo_list) {
 								&& next_tmux_pane_metadata->at_bottom
 								&& !next_tmux_pane_metadata->at_left
 								&& next_tmux_pane_metadata->at_right) {
-							snprintf(OPEN_TBMARK_ENTRIES_CMD, sizeof(OPEN_TBMARK_ENTRIES_CMD), "tmux resize-pane -t %d -x %d -y %d && tmux split-window -h && cd %s && %s %s && clear\n", tmux_pane_id, tmux_pane_metadata->width, tmux_pane_metadata->height, cfginfo_list->entries[cfg_entry_index].cwd, cfginfo_list->entries[cfg_entry_index].comm, cfginfo_list->entries[cfg_entry_index].cmdlargs);
+							snprintf(OPEN_TBMARK_ENTRIES_CMD, sizeof(OPEN_TBMARK_ENTRIES_CMD), "tmux resize-pane -t %d -x %d -y %d && tmux split-window -h && cd %s && %s %s\n", tmux_pane_id, tmux_pane_metadata->width, tmux_pane_metadata->height, cfginfo_list->entries[cfg_entry_index].cwd, (saved_comm_len == 0) ? "clear" : cfginfo_list->entries[cfg_entry_index].comm, cfginfo_list->entries[cfg_entry_index].cmdlargs);
 						} else if (!tmux_pane_metadata->at_top
 								&& tmux_pane_metadata->at_bottom
 								&& !tmux_pane_metadata->at_left
 								&& tmux_pane_metadata->at_right) {
-							snprintf(OPEN_TBMARK_ENTRIES_CMD, sizeof(OPEN_TBMARK_ENTRIES_CMD), "tmux resize-pane -t %d -x %d -y %d && cd %s && %s %s\n", tmux_pane_id, tmux_pane_metadata->width, tmux_pane_metadata->height, cfginfo_list->entries[cfg_entry_index].cwd, (strnlen(cfginfo_list->entries[cfg_entry_index].comm, MAX_COMM_LEN) == 0) ? "clear" : cfginfo_list->entries[cfg_entry_index].comm, cfginfo_list->entries[cfg_entry_index].cmdlargs);
+							snprintf(OPEN_TBMARK_ENTRIES_CMD, sizeof(OPEN_TBMARK_ENTRIES_CMD), "tmux resize-pane -t %d -x %d -y %d && cd %s && %s %s\n", tmux_pane_id, tmux_pane_metadata->width, tmux_pane_metadata->height, cfginfo_list->entries[cfg_entry_index].cwd, (saved_comm_len == 0) ? "clear" : cfginfo_list->entries[cfg_entry_index].comm, cfginfo_list->entries[cfg_entry_index].cmdlargs);
 						}
 
 						//  ---------
@@ -459,7 +460,7 @@ int cfg_exec(int fd, pid_t ppid, CfgInfoArr *cfginfo_list) {
 								&& next_tmux_pane_metadata->at_bottom
 								&& next_tmux_pane_metadata->at_left
 								&& !next_tmux_pane_metadata->at_right) {
-							snprintf(OPEN_TBMARK_ENTRIES_CMD, sizeof(OPEN_TBMARK_ENTRIES_CMD), "tmux resize-pane -t %d -x %d -y %d && tmux split-window -h && tmux select-pane -t 0 && tmux split-window -v && cd %s && %s %s && clear\n", tmux_pane_id, tmux_pane_metadata->width, tmux_pane_metadata->height, cfginfo_list->entries[cfg_entry_index].cwd, cfginfo_list->entries[cfg_entry_index].comm, cfginfo_list->entries[cfg_entry_index].cmdlargs);
+							snprintf(OPEN_TBMARK_ENTRIES_CMD, sizeof(OPEN_TBMARK_ENTRIES_CMD), "tmux resize-pane -t %d -x %d -y %d && tmux split-window -h && tmux select-pane -t 0 && tmux split-window -v && cd %s && %s %s\n", tmux_pane_id, tmux_pane_metadata->width, tmux_pane_metadata->height, cfginfo_list->entries[cfg_entry_index].cwd, (saved_comm_len == 0) ? "clear" : cfginfo_list->entries[cfg_entry_index].comm, cfginfo_list->entries[cfg_entry_index].cmdlargs);
 						} else if (!tmux_pane_metadata->at_top
 								&& tmux_pane_metadata->at_bottom
 								&& tmux_pane_metadata->at_left
@@ -468,12 +469,12 @@ int cfg_exec(int fd, pid_t ppid, CfgInfoArr *cfginfo_list) {
 								&& next_tmux_pane_metadata->at_bottom
 								&& !next_tmux_pane_metadata->at_left
 								&& next_tmux_pane_metadata->at_right) {
-							snprintf(OPEN_TBMARK_ENTRIES_CMD, sizeof(OPEN_TBMARK_ENTRIES_CMD), "tmux resize-pane -t %d -x %d -y %d && tmux select-pane -t 2 && cd %s && %s %s && clear\n", tmux_pane_id, tmux_pane_metadata->width, tmux_pane_metadata->height, cfginfo_list->entries[cfg_entry_index].cwd, cfginfo_list->entries[cfg_entry_index].comm, cfginfo_list->entries[cfg_entry_index].cmdlargs);
+							snprintf(OPEN_TBMARK_ENTRIES_CMD, sizeof(OPEN_TBMARK_ENTRIES_CMD), "tmux resize-pane -t %d -x %d -y %d && tmux select-pane -t 2 && cd %s && %s %s\n", tmux_pane_id, tmux_pane_metadata->width, tmux_pane_metadata->height, cfginfo_list->entries[cfg_entry_index].cwd, (saved_comm_len == 0) ? "clear" : cfginfo_list->entries[cfg_entry_index].comm, cfginfo_list->entries[cfg_entry_index].cmdlargs);
 						} else if (tmux_pane_metadata->at_top
 								&& tmux_pane_metadata->at_bottom
 								&& !tmux_pane_metadata->at_left
 								&& tmux_pane_metadata->at_right) {
-							snprintf(OPEN_TBMARK_ENTRIES_CMD, sizeof(OPEN_TBMARK_ENTRIES_CMD), "tmux resize-pane -t %d -x %d -y %d && cd %s && %s %s\n", tmux_pane_id, tmux_pane_metadata->width, tmux_pane_metadata->height, cfginfo_list->entries[cfg_entry_index].cwd, (strnlen(cfginfo_list->entries[cfg_entry_index].comm, MAX_COMM_LEN) == 0) ? "clear" : cfginfo_list->entries[cfg_entry_index].comm, cfginfo_list->entries[cfg_entry_index].cmdlargs);
+							snprintf(OPEN_TBMARK_ENTRIES_CMD, sizeof(OPEN_TBMARK_ENTRIES_CMD), "tmux resize-pane -t %d -x %d -y %d && cd %s && %s %s\n", tmux_pane_id, tmux_pane_metadata->width, tmux_pane_metadata->height, cfginfo_list->entries[cfg_entry_index].cwd, (saved_comm_len == 0) ? "clear" : cfginfo_list->entries[cfg_entry_index].comm, cfginfo_list->entries[cfg_entry_index].cmdlargs);
 						}
 
 						//  ---------
@@ -485,7 +486,7 @@ int cfg_exec(int fd, pid_t ppid, CfgInfoArr *cfginfo_list) {
 								&& tmux_pane_metadata->at_bottom
 								&& tmux_pane_metadata->at_left
 								&& !tmux_pane_metadata->at_right) {
-							snprintf(OPEN_TBMARK_ENTRIES_CMD, sizeof(OPEN_TBMARK_ENTRIES_CMD), "tmux resize-pane -t %d -x %d -y %d && tmux split-window -h && cd %s && %s %s && clear\n", tmux_pane_id, tmux_pane_metadata->width, tmux_pane_metadata->height, cfginfo_list->entries[cfg_entry_index].cwd, cfginfo_list->entries[cfg_entry_index].comm, cfginfo_list->entries[cfg_entry_index].cmdlargs);
+							snprintf(OPEN_TBMARK_ENTRIES_CMD, sizeof(OPEN_TBMARK_ENTRIES_CMD), "tmux resize-pane -t %d -x %d -y %d && tmux split-window -h && cd %s && %s %s\n", tmux_pane_id, tmux_pane_metadata->width, tmux_pane_metadata->height, cfginfo_list->entries[cfg_entry_index].cwd, (saved_comm_len == 0) ? "clear" : cfginfo_list->entries[cfg_entry_index].comm, cfginfo_list->entries[cfg_entry_index].cmdlargs);
 						} else if (tmux_pane_metadata->at_top
 								&& !tmux_pane_metadata->at_bottom
 								&& !tmux_pane_metadata->at_left
@@ -494,7 +495,7 @@ int cfg_exec(int fd, pid_t ppid, CfgInfoArr *cfginfo_list) {
 								&& next_tmux_pane_metadata->at_bottom
 								&& !next_tmux_pane_metadata->at_left
 								&& next_tmux_pane_metadata->at_right) {
-							snprintf(OPEN_TBMARK_ENTRIES_CMD, sizeof(OPEN_TBMARK_ENTRIES_CMD), "tmux resize-pane -t %d -x %d -y %d && tmux split-window -v && cd %s && %s %s && clear\n", tmux_pane_id, tmux_pane_metadata->width, tmux_pane_metadata->height, cfginfo_list->entries[cfg_entry_index].cwd, (strnlen(cfginfo_list->entries[cfg_entry_index].comm, MAX_COMM_LEN) == 0) ? "clear" : cfginfo_list->entries[cfg_entry_index].comm, cfginfo_list->entries[cfg_entry_index].cmdlargs);
+							snprintf(OPEN_TBMARK_ENTRIES_CMD, sizeof(OPEN_TBMARK_ENTRIES_CMD), "tmux resize-pane -t %d -x %d -y %d && tmux split-window -v && cd %s && %s %s\n", tmux_pane_id, tmux_pane_metadata->width, tmux_pane_metadata->height, cfginfo_list->entries[cfg_entry_index].cwd, (saved_comm_len == 0) ? "clear" : cfginfo_list->entries[cfg_entry_index].comm, cfginfo_list->entries[cfg_entry_index].cmdlargs);
 						}
 						
 						/* Set the active tmux pane */
@@ -519,17 +520,17 @@ int cfg_exec(int fd, pid_t ppid, CfgInfoArr *cfginfo_list) {
 								&& !tmux_pane_metadata->at_bottom 
 								&& tmux_pane_metadata->at_left 
 								&& !tmux_pane_metadata->at_right) {
-						        snprintf(OPEN_TBMARK_ENTRIES_CMD, sizeof(OPEN_TBMARK_ENTRIES_CMD), "tmux resize-pane -t %d -x %d -y %d && tmux split-window -h && tmux select-pane -t 0 && tmux split-window -v && cd %s && %s %s && clear\n", tmux_pane_id, tmux_pane_metadata->width, tmux_pane_metadata->height, cfginfo_list->entries[cfg_entry_index].cwd, cfginfo_list->entries[cfg_entry_index].comm, cfginfo_list->entries[cfg_entry_index].cmdlargs);
+						        snprintf(OPEN_TBMARK_ENTRIES_CMD, sizeof(OPEN_TBMARK_ENTRIES_CMD), "tmux resize-pane -t %d -x %d -y %d && tmux split-window -h && tmux select-pane -t 0 && tmux split-window -v && cd %s && %s %s\n", tmux_pane_id, tmux_pane_metadata->width, tmux_pane_metadata->height, cfginfo_list->entries[cfg_entry_index].cwd, (saved_comm_len == 0) ? "clear" : cfginfo_list->entries[cfg_entry_index].comm, cfginfo_list->entries[cfg_entry_index].cmdlargs);
 						} else if (!tmux_pane_metadata->at_top 
 								&& tmux_pane_metadata->at_bottom 
 								&& tmux_pane_metadata->at_left 
 								&& !tmux_pane_metadata->at_right) {
-						        snprintf(OPEN_TBMARK_ENTRIES_CMD, sizeof(OPEN_TBMARK_ENTRIES_CMD), "tmux resize-pane -t %d -x %d -y %d && tmux select-pane -t 2 && cd %s && %s %s && clear\n", tmux_pane_id, tmux_pane_metadata->width, tmux_pane_metadata->height, cfginfo_list->entries[cfg_entry_index].cwd, cfginfo_list->entries[cfg_entry_index].comm, cfginfo_list->entries[cfg_entry_index].cmdlargs);
+						        snprintf(OPEN_TBMARK_ENTRIES_CMD, sizeof(OPEN_TBMARK_ENTRIES_CMD), "tmux resize-pane -t %d -x %d -y %d && tmux select-pane -t 2 && cd %s && %s %s\n", tmux_pane_id, tmux_pane_metadata->width, tmux_pane_metadata->height, cfginfo_list->entries[cfg_entry_index].cwd, cfginfo_list->entries[cfg_entry_index].comm, (saved_comm_len == 0) ? "clear" : cfginfo_list->entries[cfg_entry_index].cmdlargs);
 						} else if (tmux_pane_metadata->at_top 
 								&& !tmux_pane_metadata->at_bottom 
 								&& !tmux_pane_metadata->at_left 
 								&& tmux_pane_metadata->at_right) {
-						        snprintf(OPEN_TBMARK_ENTRIES_CMD, sizeof(OPEN_TBMARK_ENTRIES_CMD), "tmux resize-pane -t %d -x %d -y %d && tmux split-window -v && cd %s && %s %s && clear\n", tmux_pane_id, tmux_pane_metadata->width, tmux_pane_metadata->height, cfginfo_list->entries[cfg_entry_index].cwd, cfginfo_list->entries[cfg_entry_index].comm, cfginfo_list->entries[cfg_entry_index].cmdlargs);
+						        snprintf(OPEN_TBMARK_ENTRIES_CMD, sizeof(OPEN_TBMARK_ENTRIES_CMD), "tmux resize-pane -t %d -x %d -y %d && tmux split-window -v && cd %s && %s %s\n", tmux_pane_id, tmux_pane_metadata->width, tmux_pane_metadata->height, cfginfo_list->entries[cfg_entry_index].cwd, (saved_comm_len == 0) ? "clear" : cfginfo_list->entries[cfg_entry_index].comm, cfginfo_list->entries[cfg_entry_index].cmdlargs);
 						} else if (!tmux_pane_metadata->at_top 
 								&& tmux_pane_metadata->at_bottom 
 								&& !tmux_pane_metadata->at_left 

@@ -10,7 +10,7 @@ Installation
 ============
 > Compiling with `gcc` works too.
 ```
- sudo apt-get install libxdo-dev make clang         # Adjust according to package manager of choice
+ sudo apt-get install libxdo-dev make clang     # Adjust according to package manager of choice
  git clone https://github.com/eehs/tbmark.git
  cd tbmark/
  make
@@ -18,7 +18,7 @@ Installation
 
 Usage
 =====
-> NOTE: CLI programs that fall under tbmark's umbrella are ones that are **interactive** and **long-running**, like `vim`, `less`, `tmux`, and **NOT** `ls`, `grep` and `cat`. I intend to add support for these 'one-off' programs in the future, by retrieving them directly from a tab's shell history.
+> NOTE: CLI programs that fall under tbmark's umbrella are ones that are **interactive** and **long-running**, like `vim`, `less`, `tmux`, and **NOT** `ls`, `grep` and `cat`. The intended behaviour for those 'one-off' programs is to **NOT** save their commands, but instead save the terminal tab's output buffer (still a WIP), which should occur regardless of it being interactive or not.
 
 ```
  ./tbmark <subcommand> [config file]
@@ -27,3 +27,10 @@ Usage
 ➥ delete: Deletes a tbmark config file
 ➥ help: Prints this help message and exits
 ```
+
+TODO
+====
+- [ ] Make `tbmark` aware of piped commands
+- [ ] Get rid of the horrible hardcoded mess when restoring terminal tabs containing `tmux` panes (create a custom `tmux` command builder)
+- [ ] Find a way to capture and restore output buffer of saved terminal tabs
+- [ ] Refactor `tbmark`
