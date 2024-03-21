@@ -15,7 +15,7 @@
 #include "debug.h"
 #include "helpers.h"
 
-#define DEBUG
+//#define DEBUG
 
 char *extract_tbm_entry_field_str(const char *buf, size_t max_tag_and_value_len, char *tag) {
 	char *substr_ptr = strstr(buf, tag);
