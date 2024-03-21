@@ -15,7 +15,7 @@
 #include "debug.h"
 #include "helpers.h"
 
-//#define DEBUG
+#define DEBUG
 
 char *extract_tbm_entry_field_str(const char *buf, size_t max_tag_and_value_len, char *tag) {
 	char *substr_ptr = strstr(buf, tag);
@@ -82,8 +82,8 @@ char *strip_args_from_cmd(const char *cmd, size_t max_cmd_len) {
         regmatch_t strip_delim_index;
         int status;
 
-        /* NOTE: This hack might not be defined behaviour, should be looked into deeper (it works though) */
-        ASSERT_NULL(regcomp(&strip_delim_regex, "\\<(.*)>", REG_EXTENDED) == 0);
+        /* NOTE: This hack might not be defined behaviour, should be looked into deeper */
+        ASSERT_NULL(regcomp(&strip_delim_regex, "(.*)>", REG_EXTENDED) == 0);
         ASSERT_NULL((status = regexec(&strip_delim_regex, cmd, 1, &strip_delim_index, 0)) != REG_NOMATCH);
 
         regfree(&strip_delim_regex);
@@ -151,7 +151,6 @@ CfgInfoArr *cfg_parse(int fd) {
 		cmd = extract_tbm_entry_field_str(buf + lines[i], PATH_MAX, "cmdlargs:");
 		comm = extract_tbm_entry_field_str(cmd, MAX_COMM_LEN, "");
 
-
 		// NOTE: In cases where a '[' character is found in the `cmdlargs` field, our solution below breaks
 		args = (strstr(cmd, "") == NULL || strstr(cmd, "(metadata)") != NULL || cmd[strnlen(comm, MAX_COMM_LEN) + 1] == '[')
 			? "" 
@@ -162,7 +161,7 @@ CfgInfoArr *cfg_parse(int fd) {
                         stripped_args = strip_args_from_cmd(cmd + strnlen(comm, MAX_COMM_LEN) + 1, PATH_MAX);
                         strncpy(args, stripped_args, PATH_MAX);
 
-                        free(stripped_args);
+                        //free(stripped_args);
                 } else if (strnlen(comm, MAX_COMM_LEN) > 1 && !strnlen(args, PATH_MAX)) {
                         /* Equivalent to a terminal tab with a command and no arguments */
                         comm[strnlen(comm, MAX_COMM_LEN) - 1] = '\0';
