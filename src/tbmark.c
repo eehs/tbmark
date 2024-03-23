@@ -19,7 +19,7 @@
 
 // Arbitrary length that covers the names of majority shell programs I've came across thus far, may change in the future 
 
-// Currently supported flags: save, open, delete, help 
+// Currently supported flags: save, open, help 
 
 int tbm_index(const char *subcmd) {
 	for (int i = 0; i < TBM_NUM_SUBCMDS; i++) {
@@ -128,24 +128,8 @@ int tbm_open(const char *shell, const char *filename) {
 	return 0;
 }
 
-int tbm_delete(const char *shell, const char *filename) {
-	char cfgpath[PATH_MAX];
-
-        if (filename != NULL) {
-                char *cfg_ext_in_filename = strstr(filename, ".cfg");
-                char *dot_cfg_str_extension = (cfg_ext_in_filename != NULL) ? "" : ".cfg";
-                
-                snprintf(cfgpath, PATH_MAX, "%s/%s/%s%s", get_homedir_of_user(getuid()), TBMARK_DIRNAME, filename, dot_cfg_str_extension);
-        }
-
-	cfg_delete(cfgpath);
-	printf("Deleting %s\n", cfgpath);
-
-	return 0;
-}
-
 void tbm_help() {
-	printf("  save:   Saves currently opened terminal tabs to a file (excluding tab where `tbmark` was ran)\n  open:	  Opens saved tabs from a tbmark config file\n  delete: Deletes a tbmark config file\n  help:   Prints this help message and exits\n");
+	printf("  save:   Saves currently opened terminal tabs to a file (excluding tab where `tbmark` was ran)\n  open:	  Opens saved tabs from a tbmark config file\n  help:   Prints this help message and exits\n");
 	exit(1);
 }
 

@@ -29,7 +29,6 @@ Usage
  ./tbmark <subcommand> [config file]
 ➥ save: Saves currently opened terminal tabs to a file (excluding tab where `tbmark` ran)
 ➥ open: Opens saved tabs from a tbmark config file
-➥ delete: Deletes a tbmark config file
 ➥ help: Prints this help message and exits
 ```
 

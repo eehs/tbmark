@@ -33,7 +33,6 @@ int extract_tbm_entry_field_int(const char *buf, size_t max_tag_and_value_len, c
 char *strip_args_from_cmd(const char *cmd, size_t max_cmd_len);
 
 int cfg_create(const char *pathname);
-void cfg_delete(const char *pathname);
 int cfg_open(const char *pathname);
 CfgInfoArr *cfg_parse(int fd);
 int cfg_exec(int fd, pid_t ppid, CfgInfoArr *cfginfo_list);

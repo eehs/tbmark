@@ -107,11 +107,6 @@ int cfg_create(const char *pathname) {
 	return 0;
 }
 
-void cfg_delete(const char *pathname) {
-	int res = unlink(pathname);
-	ASSERT_EXIT(res != -1);
-}
-
 int cfg_open(const char *pathname) {
 	int cfg_fd;
 
