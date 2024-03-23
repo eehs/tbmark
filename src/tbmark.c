@@ -56,7 +56,7 @@ int tbm_save(const char *shell, const char *filename) {
 
 	// Scraping and parsing of process data starts here 
 	PIDInfoArr *ttabs;
-	ASSERT_RET(get_terminal_emu_and_proc_info(&ttabs, cfg_fd, ppid, TBM_RDWR_PIDINFO | TBM_SKIP_CURRENT_PID) != -1);
+	ASSERT_RET(get_terminal_emu_and_proc_info(&ttabs, cfg_fd, ppid, TBM_RDWR_PIDINFO) != -1);
 
 	printf("\n");
 

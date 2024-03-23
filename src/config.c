@@ -557,7 +557,7 @@ int cfg_exec(int fd, pid_t ppid, CfgInfoArr *cfginfo_list) {
 				// TODO: Find a better way to determine if a terminal window has opened
 				usleep(700000);
 		
-			        ASSERT_RET(get_terminal_emu_and_proc_info(&ttabs_list, fd, ppid, TBM_RDONLY_PIDINFO | TBM_SKIP_CURRENT_PID | TBM_SILENT) != -1);
+			        ASSERT_RET(get_terminal_emu_and_proc_info(&ttabs_list, fd, ppid, TBM_SILENT) != -1);
 
 			        // Execute command in tbmark entry 
 			        snprintf(OPEN_TBMARK_ENTRIES_CMD, sizeof(OPEN_TBMARK_ENTRIES_CMD), "cd %s && %s %s\n", cfginfo_list->entries[cfg_entry_index].cwd, (strnlen(cfginfo_list->entries[cfg_entry_index].comm, MAX_COMM_LEN) == 0) ? "clear" : cfginfo_list->entries[cfg_entry_index].comm, cfginfo_list->entries[cfg_entry_index].cmdlargs);
@@ -566,10 +566,11 @@ int cfg_exec(int fd, pid_t ppid, CfgInfoArr *cfginfo_list) {
 				ASSERT_RET(write_proc_stdin(ttabs_list->pidlist[normal_prog_counter].pid, OPEN_TBMARK_ENTRIES_CMD, strnlen(OPEN_TBMARK_ENTRIES_CMD, sizeof(OPEN_TBMARK_ENTRIES_CMD))) != -1);
 		
 				normal_prog_counter++;
-				free(ttabs_list->pidlist);
-				free(ttabs_list);
 				break;
 		}
+		free(ttabs_list->pidlist);
+		free(ttabs_list);
+
 	        if (xdo_send_keysequence_window(xdo, CURRENTWINDOW, "alt+1", 0) == 1) break;
 	}
 	xdo_free(xdo);
