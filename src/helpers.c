@@ -59,7 +59,7 @@ int exec_and_capture_output(const char *cmd_in, char *cmd_out) {
         char stream_ch;
         int stream_index = 0;
 
-        /* Capture stdout/stderr of upon execution of a linux command */
+        // Capture stdout/stderr of upon execution of a shell command
         stream = popen(cmd_in, "r");
         ASSERT_RET(stream != NULL);
 
@@ -83,7 +83,7 @@ char *get_homedir_of_user(uid_t uid) {
         return pwd->pw_dir;
 }
 
-/* Splits a string into an array of strings, provided a delimeter */
+// Splits a string into an array of strings, provided a delimeter
 char **split(char *str, char delim, size_t max_arr_len, size_t *out_arr_len) {
         char **arr = calloc(max_arr_len, sizeof(char *));
         ASSERT_NULL(arr != NULL);
@@ -117,8 +117,8 @@ char **split(char *str, char delim, size_t max_arr_len, size_t *out_arr_len) {
         return arr;
 }
 
-// NOTE: Kind of a hacky way to cleanup the tbmark config file (only used there)
-/* Remove lines from a file that match the provided delimeter at the start of each line */
+// NOTE: Kind of a hacky way to cleanup the tbmark config file (only used once)
+// Remove lines from a file that match the provided delimeter at the start of each line
 int remove_lines_from_file(char *path, char *delim, size_t max_file_size) {
         int read_fd, write_fd;
         char entries[max_file_size];
@@ -129,7 +129,7 @@ int remove_lines_from_file(char *path, char *delim, size_t max_file_size) {
         ASSERT_RET(read(read_fd, entries, max_file_size) != -1);
 	close(read_fd);
 
-	/* Count the amount of lines in `tbmark-cfg` */
+	// Count the amount of lines in `tbmark-cfg`
         size_t lines = 0;
         for (int i = 0; i < strnlen(entries, max_file_size); i++) {
                 if (entries[i] == '\n') {
@@ -137,11 +137,11 @@ int remove_lines_from_file(char *path, char *delim, size_t max_file_size) {
 		} else continue;
         }
 
-        /* Recreate `tbmark-cfg` and write updated and parsed entries to `tbmark-cfg` */
+        // Recreate `tbmark-cfg` and write updated and parsed entries to `tbmark-cfg`
 	ASSERT_RET(cfg_create(path) != -1);
 	ASSERT_RET((write_fd = cfg_open(path)) != -1);
 	
-	/* Append tbmark entries that don't match the provided delimeter at the start of each line, to our buffer of updated tbmark entries */
+	// Append tbmark entries that don't match the provided delimeter at the start of each line, to our buffer of updated tbmark entries
 	char **entries_arr = split(entries, '\n', lines, 0);
 	if (entries_arr != NULL) {
 		for (int i = 0; i < lines; i++) {

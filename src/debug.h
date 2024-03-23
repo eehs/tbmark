@@ -11,7 +11,6 @@ char *strerror(int errnum);
 void __printf LOG(const char *msg, ...);
 void __printf ERROR(const char *msg, ...);
 
-/* Basic asserts with no garbage collection */
 #define ASSERT_EXIT(res) \
 	if (!(res)) { \
 		(ERROR("\e[31m%s\e[0m @ %s:%d (%s)\n", strerror(errno), __func__, __LINE__, __FILE__)); \

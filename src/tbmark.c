@@ -17,9 +17,9 @@
 // TODO: Get tbmark to play nice with commands ran over SSH (could make use of `sshpass` or something similar)
 // TODO: Add some form of testing (different scenarios, e.g., multiple terminal tabs, CLI arguments with space characters, etc)
 
-/* Arbitrary length that covers the names of majority shell programs I've came across thus far, may change in the future */
+// Arbitrary length that covers the names of majority shell programs I've came across thus far, may change in the future 
 
-/* Currently supported flags: save, open, delete, help */
+// Currently supported flags: save, open, delete, help 
 
 int tbm_index(const char *subcmd) {
 	for (int i = 0; i < TBM_NUM_SUBCMDS; i++) {
@@ -38,11 +38,11 @@ int tbm_save(const char *shell, const char *filename) {
 	char cfgdir[PATH_MAX - FILE_NAME_MAX_LEN], cfgpath[PATH_MAX];
 	int cfg_fd;
 	
-	/* Parent PID needed to identify terminal program */
+	// Parent PID needed to identify terminal program 
 	ppid = getppid();
 	printf("Saving open tabs...\n");
 
-	/* Create config file and start logging terminal info to it */
+	// Create config file and start logging terminal info to it 
         snprintf(cfgdir, PATH_MAX - FILE_NAME_MAX_LEN, "%s/%s", get_homedir_of_user(getuid()), TBMARK_DIRNAME);
         mkdir(cfgdir, 0777);
 
@@ -54,7 +54,7 @@ int tbm_save(const char *shell, const char *filename) {
 	ASSERT_RET((cfg_create(cfgpath)) != -1);
 	ASSERT_RET((cfg_fd = cfg_open(cfgpath)) != -1);
 
-	/* Scraping and parsing of process data starts here */
+	// Scraping and parsing of process data starts here 
 	PIDInfoArr *ttabs;
 	ASSERT_RET(get_terminal_emu_and_proc_info(&ttabs, cfg_fd, ppid, TBM_RDWR_PIDINFO | TBM_SKIP_CURRENT_PID) != -1);
 
@@ -63,14 +63,14 @@ int tbm_save(const char *shell, const char *filename) {
 	free(ttabs->pidlist);
 	free(ttabs);
 
-	/* Get rid of pre-parsed tmux pane programs (if any) */
+	// Get rid of pre-parsed tmux pane programs (if any) 
 	remove_lines_from_file(cfgpath, "ppid:", 4096);
 	close(cfg_fd);
 
 	return 0;
 }
 
-/* Must be executed with root privileges (direct injection to process stdin) */
+// Must be executed with root privileges (direct write to process stdin) 
 int tbm_open(const char *shell, const char *filename) {
 	pid_t ppid;
 	char cwd[PATH_MAX];
@@ -88,7 +88,7 @@ int tbm_open(const char *shell, const char *filename) {
 
 	ppid = getppid();
 
-	/* Get user's home directory through current working directory (Could possibly find another way to get user's $HOME) */
+	// Get user's home directory through current working directory (Could possibly find another way to get user's $HOME) 
         ASSERT_RET(getcwd(cwd, PATH_MAX) != NULL);
         ASSERT_RET(regcomp(&userhome_regex, "(\\/home\\/[a-z0-9_-]{0,31})", REG_EXTENDED) == 0);
         ASSERT_RET((userhome_ret = regexec(&userhome_regex, cwd, 1, &userhome_index, 0)) != REG_NOMATCH);
@@ -100,7 +100,7 @@ int tbm_open(const char *shell, const char *filename) {
 		}
         }
 
-        /* Open and parse tbmark config file for program restoration */
+        // Open and parse tbmark config file for program restoration
         if (filename != NULL) {
                 char *cfg_ext_in_filename = strstr(filename, ".cfg");
                 char *dot_cfg_str_extension = (cfg_ext_in_filename != NULL) ? "" : ".cfg";
@@ -136,8 +136,6 @@ int tbm_delete(const char *shell, const char *filename) {
                 char *dot_cfg_str_extension = (cfg_ext_in_filename != NULL) ? "" : ".cfg";
                 
                 snprintf(cfgpath, PATH_MAX, "%s/%s/%s%s", get_homedir_of_user(getuid()), TBMARK_DIRNAME, filename, dot_cfg_str_extension);
-        } else {
-        	snprintf(cfgpath, PATH_MAX, "%s/%s/tbmark.cfg", get_homedir_of_user(getuid()), TBMARK_DIRNAME);
         }
 
 	cfg_delete(cfgpath);
@@ -148,7 +146,7 @@ int tbm_delete(const char *shell, const char *filename) {
 
 void tbm_help() {
 	printf("  save:   Saves currently opened terminal tabs to a file (excluding tab where `tbmark` was ran)\n  open:	  Opens saved tabs from a tbmark config file\n  delete: Deletes a tbmark config file\n  help:   Prints this help message and exits\n");
-	exit(-1);
+	exit(1);
 }
 
 int main(int argc, char **argv) {
@@ -158,8 +156,9 @@ int main(int argc, char **argv) {
 
         tbm_command = tbm_index(argv[1]);
         if (tbm_command != -1) {
-                if (argc == 2) tbm_func_table[tbm_command](shell, NULL);
-                else if (argc == 3) {
+                if (argc == 2) {
+                        tbm_func_table[tbm_command](shell, NULL);
+                } else if (argc == 3) {
                         strncpy(filename, argv[2], FILE_NAME_MAX_LEN);
                         tbm_func_table[tbm_command](shell, filename);
                 }
@@ -167,8 +166,8 @@ int main(int argc, char **argv) {
                 return 0;
         }
 
-	printf("Usage: tbmark [subcommand] <config file> (defaults to 'tbmark.cfg' if left empty)\n\nList of available commands:\n");
+	printf("Usage: tbmark <subcommand> [config file] (defaults to 'tbmark.cfg' if empty)\n\nList of available commands:\n");
 	tbm_help();
 
-	return -1;
+	return 1;
 }

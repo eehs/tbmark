@@ -8,7 +8,7 @@ typedef enum {
 	TBM_TMUX
 } tbmark_supported_iprograms;
 
-/* Dedicated function pointers for arguments of a specific type */
+// Dedicated function pointers for arguments of a specific type
 typedef char *(*fp_interactive_progs_int)(int cfg_fd);
 typedef char *(*fp_interactive_progs_str)(char *str);
 extern const char *iprograms[INTERACTIVE_PROGRAMS_COUNT];
@@ -16,7 +16,7 @@ extern const char *iprogram_glossary[INTERACTIVE_PROGRAMS_COUNT];
 extern fp_interactive_progs_int iprogram_loggers[INTERACTIVE_PROGRAMS_COUNT];
 extern fp_interactive_progs_str iprogram_parsers[INTERACTIVE_PROGRAMS_COUNT];
 
-/* Returns index to `iprograms` on successful match of substring */
+// Returns index to `iprograms` on successful match of substring
 int is_iprogram(const char *cmdlargs);
 char *get_iprogram_name(int index);
 

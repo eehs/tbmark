@@ -36,6 +36,7 @@ Usage
 TODO
 ====
 - [ ] Make `tbmark` aware of piped commands
+- [ ] Only restore tabs in current terminal window
 - [ ] Find a way to capture and restore output buffer of saved terminal tabs
 - [ ] Get rid of the horrible hardcoded mess when restoring terminal tabs using `tmux` panes (create a custom `tmux` command builder)
 - [ ] Refactor `tbmark`
