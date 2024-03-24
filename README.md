@@ -12,9 +12,8 @@ The main motivation behind this project was to boost productivity since my workf
 
 Installation
 ============
-> Compiling works with `gcc` too.
 ```
- sudo apt-get install libxdo-dev make clang     # Adjust according to package manager of choice
+ sudo apt-get install libxdo-dev make gcc   # Adjust according to package manager of choice
  git clone https://github.com/eehs/tbmark.git
  cd tbmark
  make

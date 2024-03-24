@@ -566,10 +566,10 @@ int cfg_exec(int fd, pid_t ppid, CfgInfoArr *cfginfo_list) {
 				ASSERT_RET(write_proc_stdin(ttabs_list->pidlist[normal_prog_counter].pid, OPEN_TBMARK_ENTRIES_CMD, strnlen(OPEN_TBMARK_ENTRIES_CMD, sizeof(OPEN_TBMARK_ENTRIES_CMD))) != -1);
 		
 				normal_prog_counter++;
+		                free(ttabs_list->pidlist);
+		                free(ttabs_list);
 				break;
 		}
-		free(ttabs_list->pidlist);
-		free(ttabs_list);
 
 	        if (xdo_send_keysequence_window(xdo, CURRENTWINDOW, "alt+1", 0) == 1) break;
 	}

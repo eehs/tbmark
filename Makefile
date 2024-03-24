@@ -1,4 +1,4 @@
-CC=clang
+CC=gcc
 CFLAGS=-g -Wall -fstack-protector-strong -Wno-error
 CLIBS=-lxdo
 SRC_DIR=src
