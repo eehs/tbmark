@@ -88,7 +88,7 @@ int tbm_open(const char *shell, const char *filename) {
 
 	ppid = getppid();
 
-	// Get user's home directory through current working directory (Could possibly find another way to get user's $HOME) 
+	// Get user's home directory through current working directory (could possibly find another way to get user's $HOME) 
         ASSERT_RET(getcwd(cwd, PATH_MAX) != NULL);
         ASSERT_RET(regcomp(&userhome_regex, "(\\/home\\/[a-z0-9_-]{0,31})", REG_EXTENDED) == 0);
         ASSERT_RET((userhome_ret = regexec(&userhome_regex, cwd, 1, &userhome_index, 0)) != REG_NOMATCH);
@@ -100,12 +100,9 @@ int tbm_open(const char *shell, const char *filename) {
 		}
         }
 
-        // Open and parse tbmark config file for program restoration
+        // Open and parse tbmark config file when restoring terminal tabs
         if (filename != NULL) {
-                char *cfg_ext_in_filename = strstr(filename, ".cfg");
-                char *dot_cfg_str_extension = (cfg_ext_in_filename != NULL) ? "" : ".cfg";
-                
-                snprintf(cfgpath, PATH_MAX, "%s/%s/%s%s", userhome, TBMARK_DIRNAME, filename, dot_cfg_str_extension);
+                snprintf(cfgpath, PATH_MAX, "%s", filename);
         } else {
                 snprintf(cfgpath, PATH_MAX, "%s/%s/tbmark.cfg", userhome, TBMARK_DIRNAME);
         }
