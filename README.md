@@ -34,6 +34,7 @@ Usage
 TODO
 ====
 - [ ] Make `tbmark` aware of piped commands
+- [ ] Add a `list` subcommand that displays saved terminal tabs from their config files
 - [ ] Find a way to capture and restore output buffer of saved terminal tabs
 - [ ] Get rid of the horrible hardcoded mess when restoring terminal tabs using `tmux` panes (create a custom `tmux` command builder)
 - [ ] Refactor `tbmark`
