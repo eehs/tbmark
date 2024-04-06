@@ -1,8 +1,7 @@
 #ifndef _HELPERS_HEADER
 #define _HELPERS_HEADER
 
-#define IPROG_INFO_SIZE 1024
-#define MAX_USERNAME_LEN 8
+#define IPROG_INFO_SIZE 1024 // seems like a decent threshold value for holding iprogram information
 
 typedef enum {
 	TBM_TMUX
@@ -17,7 +16,7 @@ extern fp_interactive_progs_int iprogram_loggers[INTERACTIVE_PROGRAMS_COUNT];
 extern fp_interactive_progs_str iprogram_parsers[INTERACTIVE_PROGRAMS_COUNT];
 
 // Returns index to `iprograms` on successful match of substring
-int is_iprogram(const char *cmdlargs);
+int is_iprogram(const char *cmdlargs, bool saving_tabs);
 char *get_iprogram_name(int index);
 
 int continue_if_root();

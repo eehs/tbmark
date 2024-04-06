@@ -30,12 +30,21 @@ fp_interactive_progs_str iprogram_parsers[INTERACTIVE_PROGRAMS_COUNT] = {
         [TBM_TMUX] = parse_tmux_info
 };
 
-int is_iprogram(const char *cmdlargs) {
+int is_iprogram(const char *cmdlargs, bool saving_tabs) {
         int res = -1;
-        for (int i = 0; i < INTERACTIVE_PROGRAMS_COUNT; i++) {
-                if (strstr(cmdlargs, iprograms[i]) != NULL && strstr(cmdlargs, "socket_path") == NULL) {
-                        res = i;
-                        break;
+        if (saving_tabs) {
+                for (int i = 0; i < INTERACTIVE_PROGRAMS_COUNT; i++) {
+                        if (strncmp(cmdlargs, iprograms[i], PATH_MAX) == 0) {
+                                res = i;
+                                break;
+                        }
+                }
+        } else {
+                for (int i = 0; i < INTERACTIVE_PROGRAMS_COUNT; i++) {
+                        if (strstr(cmdlargs, iprograms[i]) != NULL && strstr(cmdlargs, "socket_path") == NULL) {
+                                res = i;
+                                break;
+                        }
                 }
         }
 
@@ -43,9 +52,8 @@ int is_iprogram(const char *cmdlargs) {
 }
 
 int continue_if_root() {
-        if (getuid() != 0 && geteuid() != 0 && getgid() != 0) {
+        if (getuid() != 0 && geteuid() != 0 && getgid() != 0)
                 return -1;
-        }
 
         return 0;
 }
@@ -67,8 +75,10 @@ int exec_and_capture_output(const char *cmd_in, char *cmd_out) {
         	while ((stream_ch = fgetc(stream)) != EOF) {
         	        cmd_out[stream_index++] = stream_ch;
 		}
+
         	cmd_out[stream_index-1] = '\0';
 	}
+
         pclose(stream);
 
         return 0;
@@ -96,6 +106,7 @@ char **split(char *str, char delim, size_t max_arr_len, size_t *out_arr_len) {
                         free(arr);
                         return NULL;
                 }
+
 		memset(arr[i], 0, 1024);
 
                 pos = 0;
@@ -110,6 +121,7 @@ char **split(char *str, char delim, size_t max_arr_len, size_t *out_arr_len) {
 				buf[pos++] = str[j];
 			}
                 }
+
                 strncpy(arr[i], buf, 1024);
                 arr[i][pos] = '\0';
         }
@@ -154,6 +166,7 @@ int remove_lines_from_file(char *path, char *delim, size_t max_file_size) {
 			}
 		}
 	}
+
         ASSERT_RET(cfg_write(write_fd, updated_entries, strnlen(updated_entries, max_file_size)) != -1);
 
 	free_str_arr(entries_arr, lines);
@@ -166,5 +179,6 @@ void free_str_arr(char **arr, size_t arr_len) {
 	for (int i = 0; i < arr_len; i++) {
 		free(arr[i]);
         }
+
 	free(arr);
 }

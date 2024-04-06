@@ -7,9 +7,10 @@
 #include <xdo.h>
 
 #define ARGMAX 131072
-#define USER_MAX 32
+#define USER_MAX sysconf(_SC_LOGIN_NAME_MAX)
 #define FILE_NAME_MAX_LEN 255
 #define CHILD_MAX sysconf(_SC_CHILD_MAX)
+#define PID_MAX_LEN 7
 #define PIPE_RD 0
 #define PIPE_WR 1
 

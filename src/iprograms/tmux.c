@@ -17,31 +17,15 @@
  
 
 #define GET_PANES_INFO_CMD "tmux list-panes -F 'pane_pid:#{pane_pid} pane_width:#{pane_width} pane_height:#{pane_height} pane_active:#{pane_active} pane_at_top:#{pane_at_top} pane_at_bottom:#{pane_at_bottom} pane_at_left:#{pane_at_left} pane_at_right:#{pane_at_right}'"
-#define GET_WINDOW_PANE_COUNT_CMD "tmux list-panes -F '#{window_panes}' | head -1"
 #define GET_TMUX_SERVER_PID_CMD "tmux list-panes -F '#{pid}' | head -1"
 
-// TODO: Get rid of magic numbers when allocating memory
-
+// This tmux subcommand returns metadata pertaining to pane(s) of the most recently selected window 
 char *get_tmux_panes_info(PIDInfoArr *pane_pids) {
-	// This tmux subcommand returns metadata pertaining to pane(s) of the most recently selected window 
-	char *buf = calloc(1024, sizeof(char));
-	ASSERT_NULL(buf != NULL);
-
-	int get_panes_info_res, get_window_pane_count_res;
-
-	char *tmux_panes_info = calloc(1024, sizeof(char));
+	char *tmux_panes_info = calloc(IPROG_INFO_SIZE, sizeof(char));
 	ASSERT_NULL(tmux_panes_info != NULL);
 
-	get_panes_info_res = exec_and_capture_output(GET_PANES_INFO_CMD, buf);
+	int get_panes_info_res = exec_and_capture_output(GET_PANES_INFO_CMD, tmux_panes_info);
 	ASSERT_NULL(get_panes_info_res != -1);
-	strncpy(tmux_panes_info, buf, 1024);
-
-	// Outputs the pane count in the most recently selected tmux window into the same buffer as above 
-	buf[0] = '\0';
-	get_window_pane_count_res = exec_and_capture_output(GET_WINDOW_PANE_COUNT_CMD, buf);
-	ASSERT_NULL(get_window_pane_count_res != -1);
-
-	free(buf);
 
 	return tmux_panes_info;
 }
@@ -52,8 +36,8 @@ char *log_tmux_info(int cfg_fd) {
 	PIDInfoArr *tmux_first_programs;
 	char *out;
 
-	// Get PID of tmux server 
-	char *pid_buf = calloc(7, sizeof(char));
+	// Get tmux server pid
+	char *pid_buf = calloc(PID_MAX_LEN, sizeof(char));
 	ASSERT_NULL(pid_buf != NULL);
 
 	get_tmux_spid_res = exec_and_capture_output(GET_TMUX_SERVER_PID_CMD, pid_buf);
@@ -63,9 +47,8 @@ char *log_tmux_info(int cfg_fd) {
 	tmux_spid = atoi(tmux_spid_str);
 	ASSERT_NULL(tmux_spid != 0);
 
-	// 3rd argument of `getpid_of_tabs` is 0 here since we are treating tmux panes (shell as parent and actual program the child) as fake 'terminal tabs' 
+	// Get tmux pane programs and their metadata
 	ASSERT_NULL(get_proc_info_ttabs(&tmux_first_programs, cfg_fd, tmux_spid, 0, TBM_CALLED_FROM_IPROG | TBM_RDWR_PIDINFO) != -1);
-
 	out = get_tmux_panes_info(tmux_first_programs);
 
 	free(tmux_first_programs->pidlist);

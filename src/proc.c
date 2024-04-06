@@ -94,11 +94,11 @@ int get_terminal_emu_and_proc_info(PIDInfoArr **ttabs, int cfg_fd, pid_t ppid, e
 
 	// If program is ran with superuser privileges (sudo), we traverse one level deeper in the process tree 
 	if (getuid() != 0) {
-		if (~flags & TBM_SILENT) {
+		if (~flags & TBM_SILENT)
 			printf("\nTerminal Emulator: %s (%d)\n", terminal_pinfo.comm, terminal_pinfo.pid);
-		}
 
 		return get_proc_info_ttabs(ttabs, cfg_fd, terminal_pinfo.pid, ppid, flags);
+
 	} else {
 		ASSERT_RET(get_proc_stat(terminal_pinfo.ppid, &real_pinfo) != -1);
 
@@ -106,7 +106,7 @@ int get_terminal_emu_and_proc_info(PIDInfoArr **ttabs, int cfg_fd, pid_t ppid, e
 	}
 }
 
-// Excludes PID of tab where script was ran 
+// Excludes PID of tab where tbmark ran 
 int getpid_of_tabs(PIDInfoArr **ttabs, pid_t ppid, pid_t mypid, enum tbm_flags flags) {
         Window active_window_id;
 	char procfs_cpid_path[PATH_MAX], procfs_cpid_data[1024];
@@ -125,13 +125,13 @@ int getpid_of_tabs(PIDInfoArr **ttabs, pid_t ppid, pid_t mypid, enum tbm_flags f
 	bytes_read = read(childpid_fd, procfs_cpid_data, sizeof(procfs_cpid_data));
 	ASSERT_RET(bytes_read >= 0);
 
-	// Buffer holding precisely right amount of bytes from `/proc/[ppid]/task/[ppid]/children` 
+	// Buffer holding precisely right amount of bytes from '/proc/[ppid]/task/[ppid]/children'
 	char proc_children_buf[bytes_read];
 	strncpy(proc_children_buf, procfs_cpid_data, bytes_read);
 
 	// Split list of children pids into substrings 
 	char *temp = proc_children_buf;
-	char *childpid_str = strtok_r(temp, " ", &temp); // The third argument saveptr is a pointer to a (char *) variable that is used internally by strtok_r() in order to maintain context between successive calls that parse the same string
+	char *childpid_str = strtok_r(temp, " ", &temp); // The third argument, 'saveptr', is a pointer to a (char *) variable that is used internally by strtok_r() in order to maintain context between successive calls that parse the same string
 
 	pid_t *childpid_arr = calloc(CHILD_MAX, sizeof(pid_t));
 	ASSERT_RET(*childpid_arr != -1);
@@ -145,7 +145,7 @@ int getpid_of_tabs(PIDInfoArr **ttabs, pid_t ppid, pid_t mypid, enum tbm_flags f
                 if (childpid > 0) {
                         // Hop over current tab and make sure we filter out tabs that are not part of the current window
                         if (childpid != mypid) {
-                                if (strnlen(childpid_str, 7) > 1 && get_proc_window_id(childpid) == active_window_id)
+                                if (strnlen(childpid_str, PID_MAX_LEN) > 1 && get_proc_window_id(childpid) == active_window_id)
         	        	        childpid_arr[childpid_count++] = childpid;
                         }
                 }
@@ -185,14 +185,13 @@ int get_proc_info_ttabs(PIDInfoArr **ttabs, int cfg_fd, pid_t term_pid, pid_t pp
 	ASSERT_RET(getpid_of_tabs(ttabs, term_pid, ppid, flags) != -1);
 
 	PIDInfoArr *terminal_tabs = *ttabs;
-	if (~flags & TBM_SILENT) {
+
+	if (~flags & TBM_SILENT)
 		printf("Child PIDs: %ld\n\nParent\n------\n%d\n", terminal_tabs->pidlist_len, term_pid);
-	}
 
 	for (int i = 0; i < terminal_tabs->pidlist_len; i++) {
-		if (~flags & TBM_SILENT) {
+		if (~flags & TBM_SILENT)
 			printf("  \u21b3 ");
-                }
 
 		ASSERT_RET(get_proc_stat(terminal_tabs->pidlist[i].pid, &terminal_tabs->pidlist[i]) != -1);
 
@@ -200,9 +199,8 @@ int get_proc_info_ttabs(PIDInfoArr **ttabs, int cfg_fd, pid_t term_pid, pid_t pp
 		PIDInfoArr *cttabs;
 		ASSERT_RET(getpid_of_tabs(&cttabs, terminal_tabs->pidlist[i].pid, 0, 0) != -1);
 
-		if (~flags & TBM_SILENT) {
+		if (~flags & TBM_SILENT)
 			printf("%d (%s) [%ld]\n", terminal_tabs->pidlist[i].pid, terminal_tabs->pidlist[i].comm, cttabs->pidlist_len);
-		}
 		
         	get_proc_info_cttabs(cfg_fd, terminal_tabs->pidlist[i], cttabs, flags);
 
@@ -223,12 +221,13 @@ void get_proc_info_cttabs(int cfg_fd, PIDInfo shell, PIDInfoArr *child, enum tbm
 
 	if (~flags & TBM_SILENT) {
 		if (child->has_children) {
-			for (int i = 0; i <= indentation_counter; i++) {
+			for (int i = 0; i <= indentation_counter; i++)
 				printf("      ");
-			}
+
 			printf("\u21b3  ");
-		} else 
+		} else {
 			indentation_counter = (!child->has_children) ? 0 : indentation_counter + 1;
+                }
 	}
 
         // Empty shell tabs running nothing will be saved into the auto-generated config file, alongside existing shell programs 
@@ -241,9 +240,8 @@ void get_proc_info_cttabs(int cfg_fd, PIDInfo shell, PIDInfoArr *child, enum tbm
                	get_proc_stat(pid, &child->pidlist[0]);
                 get_proc_cmdargs(pid, &child->pidlist[0]);
 
-	        if (~flags & TBM_SILENT) {
+	        if (~flags & TBM_SILENT)
 	        	printf("%d (%s)\n", pid, cmdlargs);
-	        }
         }
 
 	// Log to tbmark config file (each 'iprogram' handles their own output formatting) 
@@ -253,7 +251,7 @@ void get_proc_info_cttabs(int cfg_fd, PIDInfo shell, PIDInfoArr *child, enum tbm
 
 		// NOTE: So no infinite loops arise
 		if (~flags & TBM_CALLED_FROM_IPROG) {
-			iprogram_index = is_iprogram(cmdlargs);
+			iprogram_index = is_iprogram(cmdlargs, true);
 			if (iprogram_index != -1) {
 				// All iprogram logger functions must return a buffer containing its program information, which we then use to concatenate to the main tbmark entry buf 
 				iprogram_metadata = iprogram_loggers[iprogram_index](cfg_fd);
@@ -292,11 +290,13 @@ void get_proc_info_cttabs(int cfg_fd, PIDInfo shell, PIDInfoArr *child, enum tbm
 				tmux_pane_count = atoi(count);
 				free(count);
 
-				// Append tmux pane command and metadata to `buf`
+				// Append tmux pane command and metadata to temporary buffer
 				ttab_entry_size = strnlen(cwd, PATH_MAX) + strnlen(cmdlargs, ARGMAX) + 31; // This number amounts to the total length of other non-variable formatted strings below
-				(strncmp(cmdlargs, "tmux", ARGMAX) != 0)
-				       	? snprintf(buf, ttab_entry_size, "ppid:%d cwd:%s cmdlargs:<%s>\n", ppid, cwd, cmdlargs)
-					: snprintf(buf, ttab_entry_size + strnlen(tmux_server_metadata, PATH_MAX), "cwd:%s cmdlargs:<%s> (metadata) %s\n", cwd, cmdlargs, tmux_server_metadata);
+                                if (strncmp(cmdlargs, "tmux", 4) == 0) {
+					snprintf(buf, ttab_entry_size + strnlen(tmux_server_metadata, PATH_MAX), "cwd:%s cmdlargs:<%s> (metadata) %s\n", cwd, cmdlargs, tmux_server_metadata);
+                                } else {
+				     	snprintf(buf, ttab_entry_size, "ppid:%d cwd:%s cmdlargs:<%s>\n", ppid, cwd, cmdlargs);
+                                }
 
 				if (iprogram_metadata != NULL) {
 					char cfg[IPROG_INFO_SIZE];
@@ -324,20 +324,24 @@ void get_proc_info_cttabs(int cfg_fd, PIDInfo shell, PIDInfoArr *child, enum tbm
 								char *tbmark_cfg_entries_pid = extract_tbm_entry_field_str(tbmark_cfg_entries[k], 12, "ppid:");
 
 								// NOTE: Only tmux pane programs in the most recently selected window will be appended (ONE tmux window ONLY)
-								if (strncmp(tmux_panes_arr_pid, tbmark_cfg_entries_pid, 7) == 0) {
+								if (strncmp(tmux_panes_arr_pid, tbmark_cfg_entries_pid, PID_MAX_LEN) == 0) {
 									snprintf(tmux_buf, IPROG_INFO_SIZE, "%s [tmux] %s\n", 
-											tbmark_cfg_entries[k] + (6 + strnlen(tbmark_cfg_entries_pid, 7)), 
-											tmux_panes_arr[j] + (10 + strnlen(tbmark_cfg_entries_pid, 7)));
+											tbmark_cfg_entries[k] + (6 + strnlen(tbmark_cfg_entries_pid, PID_MAX_LEN)), 
+											tmux_panes_arr[j] + (10 + strnlen(tbmark_cfg_entries_pid, PID_MAX_LEN)));
+
 									strncat(buf, tmux_buf, strnlen(tmux_buf, IPROG_INFO_SIZE));
 								}
+
 								free(tbmark_cfg_entries_pid);
 								free(tmux_panes_arr_pid);
 							}
 						}
 					}
+
 					free_str_arr(tbmark_cfg_entries, MAX_TBMARK_TABS);
 					free_str_arr(tmux_panes_arr, tmux_pane_count);
 				}
+
 				free(tmux_server_metadata);
 				free(iprogram_metadata);
 
@@ -375,6 +379,7 @@ int write_proc_stdin(pid_t pid, const char *cmd, size_t cmd_len) {
 			ASSERT_EXIT(ioctl(fd, TIOCSTI, &cmd[i]) != -1);
 		}
 	} 
+
 	close(fd);
 
 	return 0;

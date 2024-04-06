@@ -36,8 +36,10 @@ char *extract_tbm_entry_field_str(const char *buf, size_t max_tag_and_value_len,
 		        	break;
         		}
 		}
+
 		return field_value;
 	}
+
 	free(field_value);
 
 	return NULL;
@@ -63,11 +65,13 @@ int extract_tbm_entry_field_int(const char *buf, size_t max_tag_and_value_len, c
 				break;
 			}
 		}
+
 		field_value_int = atoi(field_value);
 		free(field_value);
 
 		return field_value_int;
 	}
+
 	free(field_value);
 
 	return -1;
@@ -137,6 +141,7 @@ CfgInfoArr *cfg_parse(int fd) {
                         tbmark_entries_len++;
                 }
         }
+
 	cfginfo_list = calloc(1, sizeof(CfgInfoArr));
 	cfginfo_list->entries = calloc(tbmark_entries_len, sizeof(CfgInfo));
 	cfginfo_list->entries_len = tbmark_entries_len;
@@ -157,21 +162,22 @@ CfgInfoArr *cfg_parse(int fd) {
                         strncpy(args, stripped_args, PATH_MAX);
 
                         free(stripped_args);
+
                 } else if (strnlen(comm, MAX_COMM_LEN) > 1 && !strnlen(args, PATH_MAX)) {
                         // Equivalent to a terminal tab with a command and no arguments 
                         comm[strnlen(comm, MAX_COMM_LEN) - 1] = '\0';
+
                 } else {
                         // Equivalent to an empty terminal tab with no commands inputted 
                         strncpy(args, " ", 2);
                 }
 
-		metadata = (strstr(cmd, "(metadata) ") == NULL) 
-			? ""
-			: cmd + strnlen(comm, MAX_COMM_LEN) + 12;
+		metadata = (strstr(cmd, "(metadata) ") == NULL) ? "" : cmd + strnlen(comm, MAX_COMM_LEN) + 12;
 
 		// We check and see if the current command was started within an `iprogram` 
 		iprog_args = extract_tbm_entry_field_str(buf + lines[i], PATH_MAX, "cmdlargs:");
-		int iprogram_index = is_iprogram(iprog_args + strnlen(comm, MAX_COMM_LEN) + strnlen(args, PATH_MAX) + 2);
+		int iprogram_index = is_iprogram(iprog_args + strnlen(comm, MAX_COMM_LEN) + strnlen(args, PATH_MAX) + 2, false);
+
 		free(iprog_args);
 
 		if (iprogram_index != -1) {
@@ -187,13 +193,11 @@ CfgInfoArr *cfg_parse(int fd) {
 		LOG("(cwdir): %s (%ld)\n", cwdir, strnlen(cwdir, PATH_MAX));
 		LOG("(comm): %s (%ld)\n", comm + 1, strnlen(comm, MAX_COMM_LEN));
 
-		if (strnlen(args, PATH_MAX) > 0) {
+		if (strnlen(args, PATH_MAX) > 0)
 			LOG("(args): %s (%ld)\n", args, strnlen(args, PATH_MAX));
-		}
 
-		if (strnlen(metadata, ARGMAX) > 0) {
+		if (strnlen(metadata, ARGMAX) > 0)
 			LOG("(metadata): %s (%ld)\n", metadata, strnlen(metadata, ARGMAX));
-		}
 
 		if (iprogram_index != -1) {
 			LOG("(iprogram): %s\n", iprog_name);
@@ -218,6 +222,7 @@ CfgInfoArr *cfg_parse(int fd) {
 		free(cwdir);
 		free(cmd);
 		free(comm);
+
 		if (strnlen(args, PATH_MAX) > 0) free(args);
 		if (strnlen(iprog_info, IPROG_INFO_SIZE) > 0) free(iprog_info);
 	}
@@ -244,28 +249,29 @@ int cfg_exec(int fd, pid_t ppid, CfgInfoArr *cfginfo_list) {
 	}
 
 	// t (index for all tbmark entries), i (index for iprogram-specific windows/structures only), r (index for regular programs only) 
-	for (int t = 0, i = 0, r = 0; 
-                        t < cfginfo_list->entries_len; t++) {
+        int t = 0, i = 0, r = 0;
+	for (; t < cfginfo_list->entries_len; t++) {
 		// `iprogram` tabs are formatted here + iprogram-specific metadata assignment to their respective variables 
 		if (strnlen(cfginfo_list->entries[t].iprogram_name, MAX_COMM_LEN) > 0) {
 			printf(" ↳ %s %d (%s): \"%s", iprogram_glossary[cfginfo_list->entries[t].iprogram_index], i + 1, cfginfo_list->entries[t].cwd, cfginfo_list->entries[t].comm);
 
-			if (strncmp(cfginfo_list->entries[t].cmdlargs, "", 1) != 0) {
+			if (strncmp(cfginfo_list->entries[t].cmdlargs, "", 1) != 0)
 				printf(" %s", cfginfo_list->entries[t].cmdlargs);
-			}
+
 			printf("\"\n");
 			i++;
+
 		} else {
 			printf("Tab %d (%s): \"%s", r + 1, cfginfo_list->entries[t].cwd, cfginfo_list->entries[t].comm);
 
-			if (strncmp(cfginfo_list->entries[t].cmdlargs, "", 1) != 0) {
+			if (strncmp(cfginfo_list->entries[t].cmdlargs, "", 1) != 0)
 				printf(" %s", cfginfo_list->entries[t].cmdlargs);
-			}
+
 			printf("\"\n");
 			r++;
 
 			// Switch-case below is used for obtaining `iprogram` metadata 
-			switch (is_iprogram(cfginfo_list->entries[t].comm)) {
+			switch (is_iprogram(cfginfo_list->entries[t].comm, false)) {
 				case 0:
 					tmux_socket_path = extract_tbm_entry_field_str(cfginfo_list->entries[t].metadata, PATH_MAX + 12, "socket_path:"); 
 					tmux_pane_count = extract_tbm_entry_field_int(cfginfo_list->entries[t].metadata, 12, "pane_count:"); 
@@ -305,11 +311,12 @@ int cfg_exec(int fd, pid_t ppid, CfgInfoArr *cfginfo_list) {
 				tmux_pane_metadata = populate_tmux_pane_metadata(cfginfo_list->entries[cfg_entry_index].iprogram_info);
 				ASSERT_RET(tmux_pane_metadata != NULL);
 
-				first_tmux_pane_metadata_pid = malloc(7 * sizeof(char));
+				first_tmux_pane_metadata_pid = malloc(PID_MAX_LEN * sizeof(char));
 				if (first_tmux_pane_metadata_pid == NULL) {
 					free(tmux_pane_metadata);
 					return -1;
 				}
+
 				snprintf(GET_TMUX_SERVER_PID_CMD, ARGMAX, "tmux -S %s list-window -F '#{pane_pid}'", tmux_socket_path);
 
 				if (exec_and_capture_output(GET_TMUX_SERVER_PID_CMD, first_tmux_pane_metadata_pid) == -1) {
@@ -325,9 +332,8 @@ int cfg_exec(int fd, pid_t ppid, CfgInfoArr *cfginfo_list) {
 				char TMUX_SELECT_PANE_CMD[ARGMAX];
 
 				// Store active pane id in a temporary variable
-				if (tmux_pane_metadata->active) {
+				if (tmux_pane_metadata->active)
 					active_pane_id = tmux_pane_id;
-				}
 
                                 size_t saved_comm_len = strnlen(cfginfo_list->entries[cfg_entry_index].comm, MAX_COMM_LEN);
 				switch(tmux_pane_count) {
@@ -573,6 +579,7 @@ int cfg_exec(int fd, pid_t ppid, CfgInfoArr *cfginfo_list) {
 
 	        if (xdo_send_keysequence_window(xdo, CURRENTWINDOW, "alt+1", 0) == 1) break;
 	}
+
 	xdo_free(xdo);
 	free(tmux_socket_path);
 

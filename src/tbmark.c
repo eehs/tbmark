@@ -44,7 +44,7 @@ int tbm_save(const char *shell, const char *filename) {
 
 	// Create config file and start logging terminal info to it 
         snprintf(cfgdir, PATH_MAX - FILE_NAME_MAX_LEN, "%s/%s", get_homedir_of_user(getuid()), TBMARK_DIRNAME);
-        mkdir(cfgdir, 0777);
+        mkdir(cfgdir, 0700);
 
         if (filename != NULL) {
         	snprintf(cfgpath, PATH_MAX, "%s/%s.cfg", cfgdir, filename);
@@ -88,7 +88,7 @@ int tbm_open(const char *shell, const char *filename) {
 
 	ppid = getppid();
 
-	// Get user's home directory through current working directory (could possibly find another way to get user's $HOME) 
+	// Get user's home directory through current working directory (should probably find another way to get user's home) 
         ASSERT_RET(getcwd(cwd, PATH_MAX) != NULL);
         ASSERT_RET(regcomp(&userhome_regex, "(\\/home\\/[a-z0-9_-]{0,31})", REG_EXTENDED) == 0);
         ASSERT_RET((userhome_ret = regexec(&userhome_regex, cwd, 1, &userhome_index, 0)) != REG_NOMATCH);
@@ -104,7 +104,7 @@ int tbm_open(const char *shell, const char *filename) {
         if (filename != NULL) {
                 snprintf(cfgpath, PATH_MAX, "%s", filename);
         } else {
-                snprintf(cfgpath, PATH_MAX, "%s/%s/tbmark.cfg", userhome, TBMARK_DIRNAME);
+                snprintf(cfgpath, PATH_MAX + USER_MAX, "%s/%s/tbmark.cfg", userhome, TBMARK_DIRNAME);
         }
 
         cfg_fd = cfg_open(cfgpath);
