@@ -57,7 +57,7 @@ int get_proc_cmdargs(pid_t pid, PIDInfo *cmdargs_result) {
 	shell_pid = getppid();
 	ASSERT_RET(get_proc_stat(shell_pid, &procfs_cmdargs_buf) != -1);
 
-	// Capture output of parsed '/proc/[pid]/cmdline' and store it in `cmdlargs` 
+	// Capture output of parsed '/proc/[pid]/cmdline'
 	snprintf(extract_cmdargs, sizeof(extract_cmdargs), "tr '\\0' ' ' < /proc/%d/cmdline", pid);
 
 	extract_cmdargs_res = exec_and_capture_output(extract_cmdargs, cmdargs_result->cmdlargs);
@@ -145,7 +145,7 @@ int getpid_of_tabs(PIDInfoArr **ttabs, pid_t ppid, pid_t mypid, enum tbm_flags f
                 if (childpid > 0) {
                         // Hop over current tab and make sure we filter out tabs that are not part of the current window
                         if (childpid != mypid) {
-                                if (strnlen(childpid_str, PID_MAX_LEN) > 1 && get_proc_window_id(childpid) == active_window_id)
+                                if (strlen(childpid_str) > 1 && get_proc_window_id(childpid) == active_window_id)
         	        	        childpid_arr[childpid_count++] = childpid;
                         }
                 }
@@ -234,7 +234,7 @@ void get_proc_info_cttabs(int cfg_fd, PIDInfo shell, PIDInfoArr *child, enum tbm
         pid_t pid = child->pidlist[0].pid;
         pid_t ppid = shell.pid;
         char *cwd = (!pid) ? shell.cwd : child->pidlist[0].cwd;
-        char *cmdlargs = (!pid) ? " " : child->pidlist[0].cmdlargs;
+        char *cmdlargs = (!pid) ? "" : child->pidlist[0].cmdlargs;
 
         if (pid) {
                	get_proc_stat(pid, &child->pidlist[0]);
@@ -258,7 +258,7 @@ void get_proc_info_cttabs(int cfg_fd, PIDInfo shell, PIDInfoArr *child, enum tbm
                         }
 		}
 
-		size_t ttab_entry_size = strnlen(cwd, PATH_MAX) + strnlen(cmdlargs, ARGMAX) + 18;
+		size_t ttab_entry_size = strlen(cwd) + strlen(cmdlargs) + 18;
 		switch (iprogram_index) {
                         // tmux
 			case 0: ;
@@ -270,8 +270,8 @@ void get_proc_info_cttabs(int cfg_fd, PIDInfo shell, PIDInfoArr *child, enum tbm
 				size_t tmux_pane_count;
 				char **tmux_panes_arr;
 
-				// `cfgpath` here is used for adding metadata information and removing pre-parsed entries in the tbmark configuration file 
-				char cfg_fdpath[22], cfgpath[PATH_MAX], tmux_buf[IPROG_INFO_SIZE];
+				// `cfg_path` here is used for adding metadata information and removing pre-parsed entries in the tbmark configuration file 
+				char cfg_fd_path[22], cfg_path[PATH_MAX], tmux_buf[IPROG_INFO_SIZE];
 
 				tmux_server_metadata = calloc(PATH_MAX, sizeof(char));
 				ASSERT_EXIT(tmux_server_metadata != NULL);
@@ -291,9 +291,9 @@ void get_proc_info_cttabs(int cfg_fd, PIDInfo shell, PIDInfoArr *child, enum tbm
 				free(count);
 
 				// Append tmux pane command and metadata to temporary buffer
-				ttab_entry_size = strnlen(cwd, PATH_MAX) + strnlen(cmdlargs, ARGMAX) + 31; // This number amounts to the total length of other non-variable formatted strings below
+				ttab_entry_size = strlen(cwd) + strlen(cmdlargs) + 31; // This number amounts to the total length of other non-variable formatted strings below
                                 if (strncmp(cmdlargs, "tmux", 4) == 0) {
-					snprintf(buf, ttab_entry_size + strnlen(tmux_server_metadata, PATH_MAX), "cwd:%s cmdlargs:<%s> (metadata) %s\n", cwd, cmdlargs, tmux_server_metadata);
+					snprintf(buf, ttab_entry_size + strlen(tmux_server_metadata), "cwd:%s cmdlargs:<%s> (metadata) %s\n", cwd, cmdlargs, tmux_server_metadata);
                                 } else {
 				     	snprintf(buf, ttab_entry_size, "ppid:%d cwd:%s cmdlargs:<%s>\n", ppid, cwd, cmdlargs);
                                 }
@@ -307,12 +307,12 @@ void get_proc_info_cttabs(int cfg_fd, PIDInfo shell, PIDInfoArr *child, enum tbm
 					tmux_panes_arr = split(iprogram_metadata, '\n', tmux_pane_count, 0);
 
                                         // Obtain full path of tbmark config file, we do it this way since the config file's name may be user-defined
-                                        snprintf(cfg_fdpath, 22, "/proc/self/fd/%d", cfg_fd);
-                                        readlink(cfg_fdpath, cfgpath, PATH_MAX);
+                                        snprintf(cfg_fd_path, 22, "/proc/self/fd/%d", cfg_fd);
+                                        readlink(cfg_fd_path, cfg_path, PATH_MAX);
 
                                         // Open the config file and append tmux data
-					ASSERT_EXIT((fd = cfg_open(cfgpath)) != -1);
-					memset(&cfg, 0, IPROG_INFO_SIZE);
+					ASSERT_EXIT((fd = cfg_open(cfg_path)) != -1);
+					memset(cfg, 0, IPROG_INFO_SIZE);
 					ASSERT_EXIT(read(fd, cfg, IPROG_INFO_SIZE) != -1);
 
 					tbmark_cfg_entries = split(cfg, '\n', MAX_TBMARK_TABS, &tbmark_cfg_entries_len);
@@ -326,10 +326,10 @@ void get_proc_info_cttabs(int cfg_fd, PIDInfo shell, PIDInfoArr *child, enum tbm
 								// NOTE: Only tmux pane programs in the most recently selected window will be appended (ONE tmux window ONLY)
 								if (strncmp(tmux_panes_arr_pid, tbmark_cfg_entries_pid, PID_MAX_LEN) == 0) {
 									snprintf(tmux_buf, IPROG_INFO_SIZE, "%s [tmux] %s\n", 
-											tbmark_cfg_entries[k] + (6 + strnlen(tbmark_cfg_entries_pid, PID_MAX_LEN)), 
-											tmux_panes_arr[j] + (10 + strnlen(tbmark_cfg_entries_pid, PID_MAX_LEN)));
+											tbmark_cfg_entries[k] + (6 + strlen(tbmark_cfg_entries_pid)), 
+											tmux_panes_arr[j] + (10 + strlen(tbmark_cfg_entries_pid)));
 
-									strncat(buf, tmux_buf, strnlen(tmux_buf, IPROG_INFO_SIZE));
+									strncat(buf, tmux_buf, strlen(tmux_buf));
 								}
 
 								free(tbmark_cfg_entries_pid);
@@ -345,11 +345,11 @@ void get_proc_info_cttabs(int cfg_fd, PIDInfo shell, PIDInfoArr *child, enum tbm
 				free(tmux_server_metadata);
 				free(iprogram_metadata);
 
-				if (cfg_write(cfg_fd, buf, strnlen(buf, sizeof(buf))) == -1) break;
+				if (cfg_write(cfg_fd, buf, strlen(buf)) == -1) break;
 				break;
 			default:
 				snprintf(buf, ttab_entry_size, "cwd:%s cmdlargs:<%s>\n", cwd, cmdlargs);
-				if (cfg_write(cfg_fd, buf, strnlen(buf, sizeof(buf))) == -1) break;
+				if (cfg_write(cfg_fd, buf, strlen(buf)) == -1) break;
 				break;
 		}
         }
@@ -368,7 +368,7 @@ int write_proc_stdin(pid_t pid, const char *cmd, size_t cmd_len) {
 	FD_ZERO(&rfds);
 	FD_SET(fd, &rfds);
 
-	// Checks if stdin of `pid` is ready to be written to
+	// Check if stdin of supplied pid is ready to be written to
 	// NOTE: Running `tbmark open` with strace returns a -ENOTTY since input doesn't come from a terminal
 	select_ret = select(fd + 1, NULL, &rfds, NULL, NULL);
 	ASSERT_EXIT(select_ret != -1);

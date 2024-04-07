@@ -1,7 +1,7 @@
 #ifndef _TBMARK_HEADER
 #define _TBMARK_HEADER
 
-#define TBM_NUM_SUBCMDS (sizeof(tbm_subcmd_table)/sizeof(tbm_subcmd_table[0]))
+#define TBMARK_SUBCMDS_LEN (sizeof(tbm_subcmd_table)/sizeof(tbm_subcmd_table[0]))
 #define TBMARK_DIRNAME ".tbmark"
 
 int tbm_index(const char *subcmd);

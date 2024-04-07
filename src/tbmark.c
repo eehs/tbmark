@@ -14,7 +14,6 @@
 #include "debug.h"
 
 // TODO: Make memory deallocations explicit (on crashes and exits)
-// TODO: Get tbmark to play nice with commands ran over SSH (could make use of `sshpass` or something similar)
 // TODO: Add some form of testing (different scenarios, e.g., multiple terminal tabs, CLI arguments with space characters, etc)
 
 // Arbitrary length that covers the names of majority shell programs I've came across thus far, may change in the future 
@@ -22,10 +21,11 @@
 // Currently supported flags: save, open, help 
 
 int tbm_index(const char *subcmd) {
-	for (int i = 0; i < TBM_NUM_SUBCMDS; i++) {
-		if (!subcmd) break;
+	for (int i = 0; i < TBMARK_SUBCMDS_LEN; i++) {
+		if (!subcmd) 
+                        break;
 
-		if (strncmp(subcmd, tbm_subcmd_table[i].cmd, strnlen(tbm_subcmd_table[i].cmd, 30)) == 0) {
+		if (strcmp(subcmd, tbm_subcmd_table[i].cmd) == 0) {
 			return tbm_subcmd_table[i].cmd_int;
 		}
 	}
@@ -64,7 +64,7 @@ int tbm_save(const char *shell, const char *filename) {
 	free(ttabs);
 
 	// Get rid of pre-parsed tmux pane programs (if any) 
-	remove_lines_from_file(cfgpath, "ppid:", 4096);
+	format_tbmark_cfg(cfgpath);
 	close(cfg_fd);
 
 	return 0;
@@ -126,7 +126,7 @@ int tbm_open(const char *shell, const char *filename) {
 }
 
 void tbm_help() {
-	printf("  save:   Saves currently opened terminal tabs to a file (excluding tab where `tbmark` was ran)\n  open:	  Opens saved tabs from a tbmark config file\n  help:   Prints this help message and exits\n");
+	printf("  save:   Saves currently opened terminal tabs to a file (excluding tab where tbmark ran)\n  open:	  Opens saved tabs from a tbmark config file\n  help:   Prints this help message and exits\n");
 	exit(1);
 }
 

@@ -32,15 +32,13 @@ fp_interactive_progs_str iprogram_parsers[INTERACTIVE_PROGRAMS_COUNT] = {
 
 int is_iprogram(const char *cmdlargs, bool saving_tabs) {
         int res = -1;
-        if (saving_tabs) {
-                for (int i = 0; i < INTERACTIVE_PROGRAMS_COUNT; i++) {
+        for (int i = 0; i < INTERACTIVE_PROGRAMS_COUNT; i++) {
+                if (saving_tabs) {
                         if (strncmp(cmdlargs, iprograms[i], PATH_MAX) == 0) {
                                 res = i;
                                 break;
                         }
-                }
-        } else {
-                for (int i = 0; i < INTERACTIVE_PROGRAMS_COUNT; i++) {
+                } else {
                         if (strstr(cmdlargs, iprograms[i]) != NULL && strstr(cmdlargs, "socket_path") == NULL) {
                                 res = i;
                                 break;
@@ -115,6 +113,7 @@ char **split(char *str, char delim, size_t max_arr_len, size_t *out_arr_len) {
                                 if (out_arr_len != 0) {
 					*out_arr_len += 1;
 				}
+
                                 str += (j + 1);
                                 break;
                         } else {
@@ -131,19 +130,20 @@ char **split(char *str, char delim, size_t max_arr_len, size_t *out_arr_len) {
 
 // NOTE: Kind of a hacky way to cleanup the tbmark config file (only used once)
 // Remove lines from a file that match the provided delimeter at the start of each line
-int remove_lines_from_file(char *path, char *delim, size_t max_file_size) {
+int format_tbmark_cfg(char *path) {
+        const char *delim = "ppid:";
+
         int read_fd, write_fd;
-        char entries[max_file_size];
-        char *updated_entries = calloc(max_file_size, sizeof(char));
+        char *entries = calloc(8092, sizeof(char));
+        char *updated_entries = calloc(8092, sizeof(char));
 
         ASSERT_RET((read_fd = cfg_open(path)) != -1);
-	memset(entries, 0, max_file_size);
-        ASSERT_RET(read(read_fd, entries, max_file_size) != -1);
+        ASSERT_RET(read(read_fd, entries, 8092) != -1);
 	close(read_fd);
 
 	// Count the amount of lines in `tbmark-cfg`
         size_t lines = 0;
-        for (int i = 0; i < strnlen(entries, max_file_size); i++) {
+        for (int i = 0; i < strlen(entries); i++) {
                 if (entries[i] == '\n') {
 			lines++;
 		} else continue;
@@ -157,7 +157,7 @@ int remove_lines_from_file(char *path, char *delim, size_t max_file_size) {
 	char **entries_arr = split(entries, '\n', lines, 0);
 	if (entries_arr != NULL) {
 		for (int i = 0; i < lines; i++) {
-			for (int j = 0; j < strnlen(delim, 64); j++) {
+			for (int j = 0; j < strlen(delim); j++) {
 				if (entries_arr[i][j] != delim[j]) {
 					strncat(entries_arr[i], "\n", 2);
 					strncat(updated_entries, entries_arr[i], strlen(entries_arr[i]));
@@ -167,7 +167,7 @@ int remove_lines_from_file(char *path, char *delim, size_t max_file_size) {
 		}
 	}
 
-        ASSERT_RET(cfg_write(write_fd, updated_entries, strnlen(updated_entries, max_file_size)) != -1);
+        ASSERT_RET(cfg_write(write_fd, updated_entries, strlen(updated_entries)) != -1);
 
 	free_str_arr(entries_arr, lines);
 	free(updated_entries);

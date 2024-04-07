@@ -23,7 +23,7 @@ int continue_if_root();
 char *get_homedir_of_user();
 int exec_and_capture_output(const char *cmd_in, char *cmd_out);
 char **split(char *str, char delim, size_t max_arr_len, size_t *out_arr_len);
-int remove_lines_from_file(char *path, char *delim, size_t max_file_size);
+int format_tbmark_cfg(char *path);
 void free_str_arr(char **arr, size_t arr_len);
 
 #endif // _HELPERS_HEADER

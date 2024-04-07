@@ -3,20 +3,8 @@
 
 #include <stdbool.h>
 #include <aio.h>
-#include <linux/limits.h>
 #include <xdo.h>
-
-#define ARGMAX 131072
-#define USER_MAX sysconf(_SC_LOGIN_NAME_MAX)
-#define FILE_NAME_MAX_LEN 255
-#define CHILD_MAX sysconf(_SC_CHILD_MAX)
-#define PID_MAX_LEN 7
-#define PIPE_RD 0
-#define PIPE_WR 1
-
-#define INTERACTIVE_PROGRAMS_COUNT 1
-#define TBMARK_SINGLE_ENTRY_SIZE 4096
-#define MAX_TBMARK_TABS 20
+#include "common.h"
 
 enum tbm_flags {
 	TBM_SILENT = 1, // Omits debug messages
@@ -30,8 +18,8 @@ typedef struct {
 	char state;
 	pid_t ppid, sid, pgid;
 	dev_t ctty;
-	char cwd[ARGMAX];
-	char cmdlargs[ARGMAX];
+	char cwd[ARG_MAX];
+	char cmdlargs[ARG_MAX];
 } PIDInfo; 
 
 typedef struct {
