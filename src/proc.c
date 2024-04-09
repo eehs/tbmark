@@ -9,9 +9,9 @@
 #include <unistd.h>
 
 #include "proc.h"
-#include "debug.h"
 #include "config.h"
 #include "helpers.h"
+#include "debug.h"
 
 int get_proc_stat(pid_t pid, PIDInfo *status_result) {
 	char procfs_status_buf[1024];
@@ -92,7 +92,7 @@ int get_terminal_emu_and_proc_info(PIDInfoArr **ttabs, int cfg_fd, pid_t ppid, e
 	ASSERT_RET(get_proc_stat(ppid, &shell_pinfo) != -1);
 	ASSERT_RET(get_proc_stat(shell_pinfo.ppid, &terminal_pinfo) != -1);
 
-	// If program is ran with superuser privileges (sudo), we traverse one level deeper in the process tree 
+	// If program is ran with superuser privileges (sudo), we traverse one layer deeper in the process tree 
 	if (getuid() != 0) {
 		if (~flags & TBM_SILENT)
 			printf("\nTerminal Emulator: %s (%d)\n", terminal_pinfo.comm, terminal_pinfo.pid);
@@ -107,7 +107,7 @@ int get_terminal_emu_and_proc_info(PIDInfoArr **ttabs, int cfg_fd, pid_t ppid, e
 }
 
 // Excludes PID of tab where tbmark ran 
-int getpid_of_tabs(PIDInfoArr **ttabs, pid_t ppid, pid_t mypid, enum tbm_flags flags) {
+int getpid_of_tabs(PIDInfoArr **ttabs, pid_t ppid, pid_t mypid) {
         Window active_window_id;
 	char procfs_cpid_path[PATH_MAX], procfs_cpid_data[1024];
 	int childpid_fd, bytes_read;
@@ -182,7 +182,7 @@ int getpid_of_tabs(PIDInfoArr **ttabs, pid_t ppid, pid_t mypid, enum tbm_flags f
 }
 
 int get_proc_info_ttabs(PIDInfoArr **ttabs, int cfg_fd, pid_t term_pid, pid_t ppid, enum tbm_flags flags) {
-	ASSERT_RET(getpid_of_tabs(ttabs, term_pid, ppid, flags) != -1);
+	ASSERT_RET(getpid_of_tabs(ttabs, term_pid, ppid) != -1);
 
 	PIDInfoArr *terminal_tabs = *ttabs;
 
@@ -197,7 +197,7 @@ int get_proc_info_ttabs(PIDInfoArr **ttabs, int cfg_fd, pid_t term_pid, pid_t pp
 
 		// Get actual programs that user runs in each terminal tab here 
 		PIDInfoArr *cttabs;
-		ASSERT_RET(getpid_of_tabs(&cttabs, terminal_tabs->pidlist[i].pid, 0, 0) != -1);
+		ASSERT_RET(getpid_of_tabs(&cttabs, terminal_tabs->pidlist[i].pid, 0) != -1);
 
 		if (~flags & TBM_SILENT)
 			printf("%d (%s) [%ld]\n", terminal_tabs->pidlist[i].pid, terminal_tabs->pidlist[i].comm, cttabs->pidlist_len);
@@ -221,8 +221,9 @@ void get_proc_info_cttabs(int cfg_fd, PIDInfo shell, PIDInfoArr *child, enum tbm
 
 	if (~flags & TBM_SILENT) {
 		if (child->has_children) {
-			for (int i = 0; i <= indentation_counter; i++)
+			for (int i = 0; i <= indentation_counter; i++) {
 				printf("      ");
+                        }
 
 			printf("\u21b3  ");
 		} else {
@@ -270,8 +271,7 @@ void get_proc_info_cttabs(int cfg_fd, PIDInfo shell, PIDInfoArr *child, enum tbm
 				size_t tmux_pane_count;
 				char **tmux_panes_arr;
 
-				// `cfg_path` here is used for adding metadata information and removing pre-parsed entries in the tbmark configuration file 
-				char cfg_fd_path[22], cfg_path[PATH_MAX], tmux_buf[IPROG_INFO_SIZE];
+				char cfg_procfs_path[22] = {0}, cfg_path[PATH_MAX] = {0}, tmux_buf[IPROG_INFO_SIZE] = {0};
 
 				tmux_server_metadata = calloc(PATH_MAX, sizeof(char));
 				ASSERT_EXIT(tmux_server_metadata != NULL);
@@ -280,11 +280,10 @@ void get_proc_info_cttabs(int cfg_fd, PIDInfo shell, PIDInfoArr *child, enum tbm
 				get_tmux_server_metadata_res = exec_and_capture_output("tmux list-window -F 'socket_path:#{socket_path} pane_count:#{window_panes}'", tmux_server_metadata);
 				ASSERT_EXIT(get_tmux_server_metadata_res != -1);
 
-				// NOTE: Since `exec_and_capture_output` returns a string via its arguments, it will need a heap-allocated string 
+				// With help from a tmux subcommand, we get the amount of panes in the most recently selected tmux window 
 				count = calloc(2, sizeof(char));
 				ASSERT_EXIT(count != NULL);
 
-				// With help from a tmux subcommand, we get the amount of panes in the most recently selected tmux window 
 				get_window_pane_count_res = (int)exec_and_capture_output("tmux list-panes -F '#{window_panes}' | head -1", count);
 				ASSERT_EXIT(get_window_pane_count_res != -1);
 				tmux_pane_count = atoi(count);
@@ -307,8 +306,8 @@ void get_proc_info_cttabs(int cfg_fd, PIDInfo shell, PIDInfoArr *child, enum tbm
 					tmux_panes_arr = split(iprogram_metadata, '\n', tmux_pane_count, 0);
 
                                         // Obtain full path of tbmark config file, we do it this way since the config file's name may be user-defined
-                                        snprintf(cfg_fd_path, 22, "/proc/self/fd/%d", cfg_fd);
-                                        readlink(cfg_fd_path, cfg_path, PATH_MAX);
+                                        snprintf(cfg_procfs_path, 22, "/proc/self/fd/%d", cfg_fd);
+                                        readlink(cfg_procfs_path, cfg_path, PATH_MAX);
 
                                         // Open the config file and append tmux data
 					ASSERT_EXIT((fd = cfg_open(cfg_path)) != -1);
@@ -369,7 +368,7 @@ int write_proc_stdin(pid_t pid, const char *cmd, size_t cmd_len) {
 	FD_SET(fd, &rfds);
 
 	// Check if stdin of supplied pid is ready to be written to
-	// NOTE: Running `tbmark open` with strace returns a -ENOTTY since input doesn't come from a terminal
+	// NOTE: Running 'tbmark open' with strace returns a -ENOTTY since input doesn't come from a terminal
 	select_ret = select(fd + 1, NULL, &rfds, NULL, NULL);
 	ASSERT_EXIT(select_ret != -1);
 
@@ -381,6 +380,5 @@ int write_proc_stdin(pid_t pid, const char *cmd, size_t cmd_len) {
 	} 
 
 	close(fd);
-
 	return 0;
 }

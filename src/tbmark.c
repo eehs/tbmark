@@ -16,8 +16,6 @@
 // TODO: Make memory deallocations explicit (on crashes and exits)
 // TODO: Add some form of testing (different scenarios, e.g., multiple terminal tabs, CLI arguments with space characters, etc)
 
-// Arbitrary length that covers the names of majority shell programs I've came across thus far, may change in the future 
-
 // Currently supported flags: save, open, help 
 
 int tbm_index(const char *subcmd) {
@@ -34,12 +32,9 @@ int tbm_index(const char *subcmd) {
 }
 
 int tbm_save(const char *shell, const char *filename) {
-	pid_t ppid;
 	char cfgdir[PATH_MAX - FILE_NAME_MAX_LEN], cfgpath[PATH_MAX];
 	int cfg_fd;
 	
-	// Parent PID needed to identify terminal program 
-	ppid = getppid();
 	printf("Saving open tabs...\n");
 
 	// Create config file and start logging terminal info to it 
@@ -47,16 +42,23 @@ int tbm_save(const char *shell, const char *filename) {
         mkdir(cfgdir, 0700);
 
         if (filename != NULL) {
-        	snprintf(cfgpath, PATH_MAX, "%s/%s.cfg", cfgdir, filename);
+                char filtered_filename[strlen(filename)];
+                strcpy(filtered_filename, filename);
+                
+                if (has_cfg_suffix(filename))
+                        filtered_filename[strlen(filtered_filename) - 4] = '\0';
+
+        	snprintf(cfgpath, PATH_MAX, "%s/%s.cfg", cfgdir, filtered_filename);
         } else {
         	snprintf(cfgpath, PATH_MAX, "%s/tbmark.cfg", cfgdir);
         }
+
 	ASSERT_RET((cfg_create(cfgpath)) != -1);
 	ASSERT_RET((cfg_fd = cfg_open(cfgpath)) != -1);
 
 	// Scraping and parsing of process data starts here 
 	PIDInfoArr *ttabs;
-	ASSERT_RET(get_terminal_emu_and_proc_info(&ttabs, cfg_fd, ppid, TBM_RDWR_PIDINFO) != -1);
+	ASSERT_RET(get_terminal_emu_and_proc_info(&ttabs, cfg_fd, getppid(), TBM_RDWR_PIDINFO | TBM_SILENT) != -1);
 
 	printf("\n");
 
@@ -66,6 +68,8 @@ int tbm_save(const char *shell, const char *filename) {
 	// Get rid of pre-parsed tmux pane programs (if any) 
 	format_tbmark_cfg(cfgpath);
 	close(cfg_fd);
+
+        printf("Terminal tabs saved to %s\n", cfgpath);
 
 	return 0;
 }
@@ -81,8 +85,8 @@ int tbm_open(const char *shell, const char *filename) {
 	int cfg_fd;
 	CfgInfoArr *cfg_prog_entry_list;
 
-	if (continue_if_root() == -1) {
-		ERROR("`open` must be ran as root!\n");
+	if (!running_as_root()) {
+		ERROR("This subcommand must be ran with root privileges!");
 		exit(1);
 	}
 
@@ -147,7 +151,7 @@ int main(int argc, char **argv) {
                 return 0;
         }
 
-	printf("Usage: tbmark <subcommand> [config file] (defaults to 'tbmark.cfg' if empty)\n\nList of available commands:\n");
+	printf("Usage: tbmark <subcommand> [config file]\n\nList of available commands:\n");
 	tbm_help();
 
 	return 1;

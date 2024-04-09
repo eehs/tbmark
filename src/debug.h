@@ -1,11 +1,10 @@
-#ifndef _DEBUG_HEADER
-#define _DEBUG_HEADER
+#ifndef TBMARK_DEBUG_H
+#define TBMARK_DEBUG_H
 
 #include <errno.h>
 
-#define MSG_MAX 1024
-
 char *strerror(int errnum);
+void printf_with_prefix(const char *prefix, const char *msg, va_list vargs);
 
 #define __printf __attribute__((format(printf, 1, 2)))
 void __printf LOG(const char *msg, ...);
@@ -29,4 +28,4 @@ void __printf ERROR(const char *msg, ...);
 		return NULL; \
 	} \
 
-#endif // _DEBUG_HEADER
+#endif // TBMARK_DEBUG_H

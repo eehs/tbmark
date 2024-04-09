@@ -40,7 +40,6 @@ char *extract_tbm_entry_field_str(const char *buf, size_t max_tag_and_value_len,
 	}
 
 	free(field_value);
-
 	return NULL;
 }
 
@@ -71,7 +70,6 @@ int extract_tbm_entry_field_int(const char *buf, size_t max_tag_and_value_len, c
 	}
 
 	free(field_value);
-
 	return -1;
 }
 
@@ -91,8 +89,8 @@ char *strip_args_from_cmd(const char *cmd) {
         regfree(&strip_delim_regex);
         if (status == 0) {
                 for (int i = strip_delim_index.rm_so, j = 0;
-                                i < (strip_delim_index.rm_eo - 1); 
-                                i++, j++) {
+                        i < (strip_delim_index.rm_eo - 1); 
+                        i++, j++) {
                         stripped[j] = cmd[i];
                 }
         }
@@ -105,7 +103,6 @@ int cfg_create(const char *pathname) {
         ASSERT_RET(res != -1);
 
 	close(res);
-
 	return 0;
 }
 
@@ -220,8 +217,11 @@ CfgInfoArr *cfg_parse(int fd) {
 		free(cmd);
 		free(comm);
 
-		if (strlen(args) > 0) free(args);
-		if (strlen(iprog_info) > 0) free(iprog_info);
+		if (strlen(args) > 0) 
+                        free(args);
+
+		if (strlen(iprog_info) > 0) 
+                        free(iprog_info);
 	}
 
 	return cfginfo_list;

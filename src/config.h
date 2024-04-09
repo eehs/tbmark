@@ -1,5 +1,5 @@
-#ifndef _CONFIG_HEADER
-#define _CONFIG_HEADER
+#ifndef TBMARK_CONFIG_H
+#define TBMARK_CONFIG_H 
 
 #include <ctype.h>
 #include <linux/limits.h>
@@ -33,4 +33,4 @@ CfgInfoArr *cfg_parse(int fd);
 int cfg_exec(int fd, pid_t ppid, CfgInfoArr *cfginfo_list);
 ssize_t cfg_write(int fd, const char *buf, size_t size);
 
-#endif // _CONFIG_HEADER
+#endif // TBMARK_CONFIG_H

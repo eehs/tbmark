@@ -1,5 +1,5 @@
-#ifndef _PROC_HEADER
-#define _PROC_HEADER
+#ifndef TBMARK_PROC_H
+#define TBMARK_PROC_H
 
 #include <stdbool.h>
 #include <aio.h>
@@ -33,7 +33,7 @@ int get_proc_cmdargs(pid_t pid, PIDInfo *cmdargs_result);
 Window get_proc_window_id(pid_t pid);
 int get_proc_info(pid_t pid, PIDInfo *result);
 int get_terminal_emu_and_proc_info(PIDInfoArr **ttabs, int cfg_fd, pid_t ppid, enum tbm_flags flags);
-int getpid_of_tabs(PIDInfoArr **ttabs, pid_t ppid, pid_t mypid, enum tbm_flags flags);
+int getpid_of_tabs(PIDInfoArr **ttabs, pid_t ppid, pid_t mypid);
 
 // PID of terminal and shell processes
 int get_proc_info_ttabs(PIDInfoArr **ttabs, int cfg_fd, pid_t term_pid, pid_t ppid, enum tbm_flags flags);
@@ -42,4 +42,4 @@ int get_proc_info_ttabs(PIDInfoArr **ttabs, int cfg_fd, pid_t term_pid, pid_t pp
 void get_proc_info_cttabs(int cfg_fd, PIDInfo shell, PIDInfoArr *child, enum tbm_flags flags);
 int write_proc_stdin(pid_t pid, const char *cmd, size_t cmd_len);
 
-#endif // _PROC_HEADER
+#endif // TBMARK_PROC_H

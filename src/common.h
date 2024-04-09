@@ -1,5 +1,5 @@
-#ifndef _COMMON_HEADER
-#define _COMMON_HEADER
+#ifndef TBMARK_COMMON_H
+#define TBMARK_COMMON_H
 
 #define ARG_MAX                                 131072
 #define IPROG_INFO_SIZE                         1024
@@ -18,4 +18,4 @@
 #define MAX_TBMARK_ENTRIES                      50
 #define MAX_TAG_LEN                             15      // Longest tag being 'pane_at_bottom:' from 'tmux' thus far
 
-#endif // _COMMON_HEADER
+#endif // TBMARK_COMMON_H

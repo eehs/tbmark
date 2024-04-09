@@ -1,5 +1,5 @@
-#ifndef _TBM_TMUX_HEADER
-#define _TBM_TMUX_HEADER
+#ifndef TBMARK_IPROG_TMUX_H
+#define TBMARK_IPROG_TMUX_H
 
 #include "../proc.h"
 #include "../config.h"
@@ -19,4 +19,4 @@ char *log_tmux_info(int cfg_fd);
 char *parse_tmux_info(char *str);
 TmuxPaneInfo *populate_tmux_pane_metadata(char *tmux_iprog_info);
 
-#endif // _TBM_TMUX_HEADER
+#endif // TBMARK_IPROG_TMUX_H

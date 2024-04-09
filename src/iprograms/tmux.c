@@ -5,8 +5,8 @@
 #include "tmux.h"
 #include "../proc.h"
 #include "../config.h"
-#include "../debug.h"
 #include "../helpers.h"
+#include "../debug.h"
 
 /* Steps to retrieve process metadata of tmux panes
  * ------------------------------------------------
@@ -48,7 +48,7 @@ char *log_tmux_info(int cfg_fd) {
 	ASSERT_NULL(tmux_spid != 0);
 
 	// Get tmux pane programs and their metadata
-	ASSERT_NULL(get_proc_info_ttabs(&tmux_first_programs, cfg_fd, tmux_spid, 0, TBM_CALLED_FROM_IPROG | TBM_RDWR_PIDINFO) != -1);
+	ASSERT_NULL(get_proc_info_ttabs(&tmux_first_programs, cfg_fd, tmux_spid, 0, TBM_CALLED_FROM_IPROG | TBM_RDWR_PIDINFO | TBM_SILENT) != -1);
 	out = get_tmux_panes_info(tmux_first_programs);
 
 	free(tmux_first_programs->pidlist);

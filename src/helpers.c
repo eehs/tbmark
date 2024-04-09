@@ -49,11 +49,20 @@ int is_iprogram(const char *cmdlargs, bool saving_tabs) {
         return res;
 }
 
-int continue_if_root() {
-        if (getuid() != 0 && geteuid() != 0 && getgid() != 0)
-                return -1;
+bool has_cfg_suffix(const char *filename) {
+        const char *filename_suffix = filename + strlen(filename) - 4;
 
-        return 0;
+        if (strncmp(".cfg", filename_suffix, 4) == 0)
+                return true;
+
+        return false;
+}
+
+bool running_as_root() {
+        if (getuid() != 0 && geteuid() != 0 && getgid() != 0)
+                return false;
+
+        return true;
 }
 
 char *get_iprogram_name(int index) {
@@ -84,9 +93,8 @@ int exec_and_capture_output(const char *cmd_in, char *cmd_out) {
 
 char *get_homedir_of_user(uid_t uid) {
         struct passwd *pwd = getpwuid(uid);
-        if (pwd == NULL) {
+        if (pwd == NULL)
                 return NULL;
-	}
 
         return pwd->pw_dir;
 }
@@ -110,9 +118,8 @@ char **split(char *str, char delim, size_t max_arr_len, size_t *out_arr_len) {
                 pos = 0;
                 for (int j = 0; j < strnlen(str, 1024); j++) {
                         if (str[j] == delim) {
-                                if (out_arr_len != 0) {
+                                if (out_arr_len != 0)
 					*out_arr_len += 1;
-				}
 
                                 str += (j + 1);
                                 break;
@@ -141,15 +148,16 @@ int format_tbmark_cfg(char *path) {
         ASSERT_RET(read(read_fd, entries, 8092) != -1);
 	close(read_fd);
 
-	// Count the amount of lines in `tbmark-cfg`
+	// Count the amount of lines in tbmark config file
         size_t lines = 0;
         for (int i = 0; i < strlen(entries); i++) {
-                if (entries[i] == '\n') {
+                if (entries[i] == '\n')
 			lines++;
-		} else continue;
+		else 
+                        continue;
         }
 
-        // Recreate `tbmark-cfg` and write updated and parsed entries to `tbmark-cfg`
+        // Recreate tbmark config file and write updated and parsed entries to it
 	ASSERT_RET(cfg_create(path) != -1);
 	ASSERT_RET((write_fd = cfg_open(path)) != -1);
 	
@@ -169,6 +177,7 @@ int format_tbmark_cfg(char *path) {
 
         ASSERT_RET(cfg_write(write_fd, updated_entries, strlen(updated_entries)) != -1);
 
+        free(entries);
 	free_str_arr(entries_arr, lines);
 	free(updated_entries);
 

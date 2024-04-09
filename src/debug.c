@@ -3,24 +3,26 @@
 #include <stdarg.h>
 #include "debug.h"
 
+void print_with_prefix(const char *prefix, const char *msg, va_list vargs) {
+        if (prefix)
+                fprintf(stderr, "%s ", prefix);
+
+        vfprintf(stderr, msg, vargs);
+        fprintf(stderr, "\n");
+}
+
 void LOG(const char *msg, ...) {
-	va_list args;
-        char formatted_msg[MSG_MAX];
+        va_list args;
 
         va_start(args, msg);
-        snprintf(formatted_msg, strlen(msg) + 9, "[INFO] %s", msg);
-        vfprintf(stdout, formatted_msg, args);
-
+        print_with_prefix("[DEBUG]", msg, args);
         va_end(args);
 }
 
 void ERROR(const char *msg, ...) {
-	va_list args;
-        char formatted_msg[MSG_MAX];
+        va_list args;
 
         va_start(args, msg);
-        snprintf(formatted_msg, strlen(msg) + 10, "[ERROR] %s", msg);
-        vfprintf(stderr, formatted_msg, args);
-
+        print_with_prefix("[ERROR]", msg, args);
         va_end(args);
 }
