@@ -6,12 +6,6 @@
 #include <xdo.h>
 #include "common.h"
 
-enum tbm_flags {
-	TBM_SILENT = 1, // Omits debug messages
-	TBM_RDWR_PIDINFO = 2, // Defaults to read-only if this flag is not set
-	TBM_CALLED_FROM_IPROG = 4,
-};
-
 typedef struct {
 	pid_t pid;
 	char comm[17];
@@ -31,15 +25,14 @@ typedef struct {
 int get_proc_stat(pid_t pid, PIDInfo *status_result);
 int get_proc_cmdargs(pid_t pid, PIDInfo *cmdargs_result);
 Window get_proc_window_id(pid_t pid);
-int get_proc_info(pid_t pid, PIDInfo *result);
-int get_terminal_emu_and_proc_info(PIDInfoArr **ttabs, int cfg_fd, pid_t ppid, enum tbm_flags flags);
+int get_terminal_emu_and_proc_info(PIDInfoArr **ttabs, int cfg_fd, pid_t ppid, enum tbm_actions actions);
 int getpid_of_tabs(PIDInfoArr **ttabs, pid_t ppid, pid_t mypid);
 
 // PID of terminal and shell processes
-int get_proc_info_ttabs(PIDInfoArr **ttabs, int cfg_fd, pid_t term_pid, pid_t ppid, enum tbm_flags flags);
+int get_proc_info_ttabs(PIDInfoArr **ttabs, int cfg_fd, pid_t term_pid, pid_t ppid, enum tbm_actions actions);
 
 // PID of the actual shell programs running
-void get_proc_info_cttabs(int cfg_fd, PIDInfo shell, PIDInfoArr *child, enum tbm_flags flags);
+void get_proc_info_cttabs(int cfg_fd, PIDInfo shell, PIDInfoArr *child, enum tbm_actions actions);
 int write_proc_stdin(pid_t pid, const char *cmd, size_t cmd_len);
 
 #endif // TBMARK_PROC_H

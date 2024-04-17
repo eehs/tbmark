@@ -18,4 +18,17 @@
 #define MAX_TBMARK_ENTRIES                      50
 #define MAX_TAG_LEN                             15      // Longest tag being 'pane_at_bottom:' from 'tmux' thus far
 
+enum tbm_options {
+        OPTION_SAVE = 1,
+        OPTION_RESTORE = 2,
+        OPTION_LIST = 4,
+        OPTION_VERBOSE = 8,
+};
+
+enum tbm_actions {
+        TBM_SILENT = 1, // Omits debug messages
+        TBM_RDWR_PIDINFO = 2, // Defaults to read-only if this flag is not set
+        TBM_CALLED_FROM_IPROG = 4,
+};
+
 #endif // TBMARK_COMMON_H

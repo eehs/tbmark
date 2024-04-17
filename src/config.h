@@ -30,7 +30,7 @@ char *strip_args_from_cmd(const char *cmd);
 int cfg_create(const char *pathname);
 int cfg_open(const char *pathname);
 CfgInfoArr *cfg_parse(int fd);
-int cfg_exec(int fd, pid_t ppid, CfgInfoArr *cfginfo_list);
+int cfg_exec(int fd, pid_t ppid, CfgInfoArr *cfginfo_list, enum tbm_actions actions);
 ssize_t cfg_write(int fd, const char *buf, size_t size);
 
 #endif // TBMARK_CONFIG_H

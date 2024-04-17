@@ -30,7 +30,7 @@ char *get_tmux_panes_info(PIDInfoArr *pane_pids) {
 	return tmux_panes_info;
 }
 
-char *log_tmux_info(int cfg_fd) {
+char *log_tmux_info(int cfg_fd, enum tbm_actions actions) {
 	pid_t tmux_spid;
 	int get_tmux_spid_res;
 	PIDInfoArr *tmux_first_programs;
@@ -48,7 +48,11 @@ char *log_tmux_info(int cfg_fd) {
 	ASSERT_NULL(tmux_spid != 0);
 
 	// Get tmux pane programs and their metadata
-	ASSERT_NULL(get_proc_info_ttabs(&tmux_first_programs, cfg_fd, tmux_spid, 0, TBM_CALLED_FROM_IPROG | TBM_RDWR_PIDINFO | TBM_SILENT) != -1);
+        enum tbm_actions tmux_actions = TBM_CALLED_FROM_IPROG | TBM_RDWR_PIDINFO;
+        if (actions & TBM_SILENT)
+                tmux_actions |= TBM_SILENT;
+
+	ASSERT_NULL(get_proc_info_ttabs(&tmux_first_programs, cfg_fd, tmux_spid, 0, tmux_actions) != -1);
 	out = get_tmux_panes_info(tmux_first_programs);
 
 	free(tmux_first_programs->pidlist);

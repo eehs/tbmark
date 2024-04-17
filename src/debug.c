@@ -11,7 +11,7 @@ void print_with_prefix(const char *prefix, const char *msg, va_list vargs) {
         fprintf(stderr, "\n");
 }
 
-void LOG(const char *msg, ...) {
+void DEBUG(const char *msg, ...) {
         va_list args;
 
         va_start(args, msg);

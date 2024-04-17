@@ -6,6 +6,7 @@
 #include <sys/stat.h>
 #include <unistd.h>
 #include <regex.h>
+#include <getopt.h>
 
 #include "tbmark.h"
 #include "proc.h"
@@ -16,14 +17,18 @@
 // TODO: Make memory deallocations explicit (on crashes and exits)
 // TODO: Add some form of testing (different scenarios, e.g., multiple terminal tabs, CLI arguments with space characters, etc)
 
-// Currently supported flags: save, open, help 
+static struct option long_options[] = {
+          { "save", no_argument, NULL, 's' },
+          { "restore", no_argument, NULL, 'r' },
+          { "list", no_argument, NULL, 'l' },
+          { "verbose", no_argument, NULL, 'v' },
+          { "help", no_argument, NULL, 'h' },
+          { NULL, 0, NULL, 0 }
+};
 
-int tbm_index(const char *subcmd) {
+int tbm_index(enum tbm_options options) {
 	for (int i = 0; i < TBMARK_SUBCMDS_LEN; i++) {
-		if (!subcmd) 
-                        break;
-
-		if (strcmp(subcmd, tbm_subcmd_table[i].cmd) == 0) {
+		if (options & tbm_subcmd_table[i].options) {
 			return tbm_subcmd_table[i].cmd_int;
 		}
 	}
@@ -31,11 +36,9 @@ int tbm_index(const char *subcmd) {
 	return -1;
 }
 
-int tbm_save(const char *shell, const char *filename) {
+int tbm_save(const char *filename, enum tbm_options options) {
 	char cfgdir[PATH_MAX - FILE_NAME_MAX_LEN], cfgpath[PATH_MAX];
 	int cfg_fd;
-	
-	printf("Saving open tabs...\n");
 
 	// Create config file and start logging terminal info to it 
         snprintf(cfgdir, PATH_MAX - FILE_NAME_MAX_LEN, "%s/%s", get_homedir_of_user(getuid()), TBMARK_DIRNAME);
@@ -53,12 +56,23 @@ int tbm_save(const char *shell, const char *filename) {
         	snprintf(cfgpath, PATH_MAX, "%s/tbmark.cfg", cfgdir);
         }
 
+        printf("Saving terminal tabs to '%s'", cfgpath);
+
 	ASSERT_RET((cfg_create(cfgpath)) != -1);
 	ASSERT_RET((cfg_fd = cfg_open(cfgpath)) != -1);
 
+        enum tbm_actions actions = TBM_RDWR_PIDINFO;
+        if (~options & OPTION_VERBOSE)
+                actions |= TBM_SILENT;
+
 	// Scraping and parsing of process data starts here 
 	PIDInfoArr *ttabs;
-	ASSERT_RET(get_terminal_emu_and_proc_info(&ttabs, cfg_fd, getppid(), TBM_RDWR_PIDINFO | TBM_SILENT) != -1);
+	ASSERT_RET(get_terminal_emu_and_proc_info(&ttabs, cfg_fd, getppid(), actions) != -1);
+
+        if (options & OPTION_VERBOSE) {
+                printf("\n");
+                DEBUG("Gathering information on terminal tab and interactive programs");
+        }
 
 	printf("\n");
 
@@ -69,15 +83,13 @@ int tbm_save(const char *shell, const char *filename) {
 	format_tbmark_cfg(cfgpath);
 	close(cfg_fd);
 
-        printf("Terminal tabs saved to %s\n", cfgpath);
-
 	return 0;
 }
 
 // Must be executed with root privileges (direct write to process stdin) 
-int tbm_open(const char *shell, const char *filename) {
+int tbm_open(const char *filename, enum tbm_options options) {
 	pid_t ppid;
-	char cwd[PATH_MAX];
+	char *cwd;
         regex_t userhome_regex;
         regmatch_t userhome_index;
         int userhome_ret;
@@ -88,12 +100,18 @@ int tbm_open(const char *shell, const char *filename) {
 	if (!running_as_root()) {
 		ERROR("This subcommand must be ran with root privileges!");
 		exit(1);
-	}
+        }	
+
+        enum tbm_actions actions = {0};
+        if (~options & OPTION_VERBOSE)
+                actions |= TBM_SILENT;
 
 	ppid = getppid();
 
-	// Get user's home directory through current working directory (should probably find another way to get user's home) 
-        ASSERT_RET(getcwd(cwd, PATH_MAX) != NULL);
+	// Get user's home directory through current working directory (breaks if user runs tbmark outside their home directory) 
+        cwd = getcwd(NULL, 0);
+        ASSERT_RET(cwd != NULL);
+
         ASSERT_RET(regcomp(&userhome_regex, "(\\/home\\/[a-z0-9_-]{0,31})", REG_EXTENDED) == 0);
         ASSERT_RET((userhome_ret = regexec(&userhome_regex, cwd, 1, &userhome_index, 0)) != REG_NOMATCH);
 
@@ -102,6 +120,8 @@ int tbm_open(const char *shell, const char *filename) {
                 for (int i = userhome_index.rm_so, j = 0; i < userhome_index.rm_eo; i++, j++) {
                         userhome[j] = cwd[i];
 		}
+
+                free(cwd);
         }
 
         // Open and parse tbmark config file when restoring terminal tabs
@@ -111,15 +131,31 @@ int tbm_open(const char *shell, const char *filename) {
                 snprintf(cfgpath, PATH_MAX + USER_MAX, "%s/%s/tbmark.cfg", userhome, TBMARK_DIRNAME);
         }
 
+        printf("Restoring saved terminal tabs from '%s'\n", cfgpath);
+
         cfg_fd = cfg_open(cfgpath);
+
+        if (options & OPTION_VERBOSE) {
+                printf("\n");
+                DEBUG("Opening '%s' for reading", cfgpath);
+        }
+
 	ASSERT_RET((cfg_prog_entry_list = cfg_parse(cfg_fd)) != NULL);
 
-	if (cfg_exec(cfg_fd, ppid, cfg_prog_entry_list) == -1) {
+        if (options & OPTION_VERBOSE)
+                DEBUG("Parsing saved terminal tabs\n");
+
+	if (cfg_exec(cfg_fd, ppid, cfg_prog_entry_list, actions) == -1) {
                 free(cfg_prog_entry_list->entries);
                 free(cfg_prog_entry_list);
                 close(cfg_fd);
 
                 return -1;
+        }
+
+        if (options & OPTION_VERBOSE) {
+                printf("\n");
+                DEBUG("Re-opening programs in newly created tabs");
         }
 
 	free(cfg_prog_entry_list->entries);
@@ -129,30 +165,54 @@ int tbm_open(const char *shell, const char *filename) {
 	return 0;
 }
 
-void tbm_help() {
-	printf("  save:   Saves currently opened terminal tabs to a file (excluding tab where tbmark ran)\n  open:	  Opens saved tabs from a tbmark config file\n  help:   Prints this help message and exits\n");
-	exit(1);
+int tbm_list(const char *filename, enum tbm_options options) {
+        return 0;
+}
+
+void tbm_usage() {
+        fprintf(stderr, "Usage: tbmark [OPTION] [FILE]\n\n");
+        
+        fprintf(stderr, "Options:\n");
+        fprintf(stderr, "  -s, --save\t\tsaves opened terminal tabs to file (excluding tab where tbmark ran)\n");
+        fprintf(stderr, "  -r, --restore\t\trestores saved terminal tabs from file\n");
+        fprintf(stderr, "  -l, --list\t\tdisplays saved terminal tabs given a file\n");
+        fprintf(stderr, "  -v, --verbose\t\tshow verbose information\n");
+        fprintf(stderr, "  -h, --help\t\tdisplay help message and exits\n");
 }
 
 int main(int argc, char **argv) {
 	int tbm_command;
-	char shell[MAX_TBMARK_TABS];
-        char filename[FILE_NAME_MAX_LEN];
+        enum tbm_options options= {0};
 
-        tbm_command = tbm_index(argv[1]);
-        if (tbm_command != -1) {
-                if (argc == 2) {
-                        tbm_func_table[tbm_command](shell, NULL);
-                } else if (argc == 3) {
-                        strncpy(filename, argv[2], FILE_NAME_MAX_LEN);
-                        tbm_func_table[tbm_command](shell, filename);
+        int param;
+        while ((param = getopt_long(argc, argv, "srlvh", long_options, NULL)) != -1) {
+                switch (param) {
+                        case 's':
+                                options |= OPTION_SAVE;
+                                break;
+                        case 'r':
+                                options |= OPTION_RESTORE;
+                                break;
+                        case 'l':
+                                options |= OPTION_LIST;
+                                break;
+                        case 'v':
+                                options |= OPTION_VERBOSE;
+                                break;
+                        case 'h':
+                        default:
+                                tbm_usage();
+                                exit(1);
                 }
+        }
+
+        tbm_command = tbm_index(options);
+        if (tbm_command != -1) {
+                tbm_func_table[tbm_command](argv[optind], options);
 
                 return 0;
         }
 
-	printf("Usage: tbmark <subcommand> [config file]\n\nList of available commands:\n");
-	tbm_help();
-
+        tbm_usage();
 	return 1;
 }

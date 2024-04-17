@@ -25,16 +25,21 @@ Usage
 > CLI programs that fall under tbmark's umbrella are ones that are **interactive** (`vim`, `less`, `tmux`) and **NOT** 'one-off' programs (`ls`, `grep`, `cat`). The intended behaviour for the latter is to **NOT** save their commands, but instead, save the terminal tab's output buffer (still WIP), which should occur for all programs regardless of their type.
 
 ```
- ./tbmark <subcommand> [config file]
-➥ save: Saves currently opened terminal tabs to a file  # Excluding tab where `tbmark` was executed
-➥ open: Opens saved tabs from a tbmark config file
-➥ help: Prints this help message and exits
+Usage: tbmark [OPTION] [FILE]
+
+Available options:
+  -s, --save        saves opened terminal tabs to file (excluding tab where tbmark ran)
+  -r, --restore     restores saved terminal tabs from file
+  -l, --list        displays saved terminal tabs given a file
+  -v, --verbose     show verbose information
+  -h, --help        display help message and exits
 ```
 
 TODO
 ====
-- [ ] Make `tbmark` aware of piped commands
 - [ ] Add a `list` subcommand that displays saved terminal tabs from their config files
+- [ ] Assign more helpful error messages
+- [ ] Make `tbmark` aware of piped commands
 - [ ] Find a way to capture and restore output buffer of saved terminal tabs
 - [ ] Get rid of the horrible hardcoded mess when restoring terminal tabs using `tmux` panes (create a custom `tmux` command builder)
 - [ ] Refactor `tbmark`

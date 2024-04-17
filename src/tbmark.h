@@ -1,26 +1,29 @@
-#ifndef _TBMARK_HEADER
-#define _TBMARK_HEADER
+#ifndef TBMARK_MAIN_H
+#define TBMARK_MAIN_H
+
+#include "common.h"
 
 #define TBMARK_SUBCMDS_LEN (sizeof(tbm_subcmd_table)/sizeof(tbm_subcmd_table[0]))
 #define TBMARK_DIRNAME ".tbmark"
 
-int tbm_index(const char *subcmd);
-int tbm_save(const char *shell, const char *filename);
-int tbm_open(const char *shell, const char *filename);
-void tbm_help();
+int tbm_index(enum tbm_options option);
+int tbm_save(const char *filename, enum tbm_options flags);
+int tbm_open(const char *filename, enum tbm_options flags);
+int tbm_list(const char *filename, enum tbm_options flags);
 
 // Basically atoi(cmdarg)
-typedef struct str_int_map {
-	const char *cmd;
+typedef struct option_int_map {
+        enum tbm_options options;
 	int cmd_int;
-} str_int_map;
+} option_int_map;
 
-str_int_map tbm_subcmd_table[] = {
-	{"save", 0},
-	{"open", 1}
+option_int_map tbm_subcmd_table[] = {
+	{ OPTION_SAVE, 0 },
+	{ OPTION_RESTORE, 1 },
+        { OPTION_LIST, 2 }
 };
 
-typedef int (*tbm_func)(const char *shell, const char *filename);
-tbm_func tbm_func_table[] = {tbm_save, tbm_open};
+typedef int (*tbm_func)(const char *filename, enum tbm_options flags);
+tbm_func tbm_func_table[] = { tbm_save, tbm_open, tbm_list };
 
-#endif // _TBMARK_HEADER
+#endif // TBMARK_MAIN_H

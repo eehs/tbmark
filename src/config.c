@@ -184,18 +184,18 @@ CfgInfoArr *cfg_parse(int fd) {
 
 #ifdef DEBUG
 		printf("\n");
-		LOG("(cwdir): %s (%ld)\n", cwdir, strlen(cwdir));
-		LOG("(comm): %s (%ld)\n", comm + 1, strlen(comm));
+		DEBUG("(cwdir): %s (%ld)\n", cwdir, strlen(cwdir));
+		DEBUG("(comm): %s (%ld)\n", comm + 1, strlen(comm));
 
 		if (strlen(args) > 0)
-			LOG("(args): %s (%ld)\n", args, strlen(args));
+			DEBUG("(args): %s (%ld)\n", args, strlen(args));
 
 		if (strlen(metadata) > 0)
-			LOG("(metadata): %s (%ld)\n", metadata, strlen(metadata));
+			DEBUG("(metadata): %s (%ld)\n", metadata, strlen(metadata));
 
 		if (iprogram_index != -1) {
-			LOG("(iprogram): %s\n", iprog_name);
-			LOG("(iprog_info): %s (%ld)\n", iprog_info, strlen(iprog_info));
+			DEBUG("(iprogram): %s\n", iprog_name);
+			DEBUG("(iprog_info): %s (%ld)\n", iprog_info, strlen(iprog_info));
 		}
 #endif
 
@@ -227,20 +227,18 @@ CfgInfoArr *cfg_parse(int fd) {
 	return cfginfo_list;
 }
 
-int cfg_exec(int fd, pid_t ppid, CfgInfoArr *cfginfo_list) {
+int cfg_exec(int fd, pid_t ppid, CfgInfoArr *cfginfo_list, enum tbm_actions actions) {
         char OPEN_TBMARK_ENTRIES_CMD[ARG_MAX + 5120];
 	xdo_t *xdo;
 
-	// Tmux-specific variables 
+	// tmux specific variables 
 	int tmux_pane_id = 0, tmux_pane_count;
 	char *tmux_socket_path;
 
 	PIDInfoArr *ttabs_list;
 	int normal_prog_counter = 0; // Since 'iprograms' may include panes containing programs such as tmux, we keep a counter over the 'regular' programs
 
-	if (cfginfo_list->entries_len)
-		printf("Reopening tabs...\n\n");
-        else
+	if (!cfginfo_list->entries_len)
 		printf("No tabs were saved.\n");
 
 	// t (index for all tbmark entries), i (index for iprogram-specific windows/structures only), r (index for regular programs only) 
@@ -248,24 +246,34 @@ int cfg_exec(int fd, pid_t ppid, CfgInfoArr *cfginfo_list) {
 	for (; t < cfginfo_list->entries_len; t++) {
 		// 'iprogram' tabs are formatted here + iprogram-specific metadata assignment to their respective variables 
 		if (strlen(cfginfo_list->entries[t].iprogram_name) > 0) {
-			printf(" ↳ %s %d (%s): \"%s", iprogram_glossary[cfginfo_list->entries[t].iprogram_index], i + 1, cfginfo_list->entries[t].cwd, cfginfo_list->entries[t].comm);
+                        if (~actions & TBM_SILENT) {
+			        printf(" ↳ %s %d (%s): %s", iprogram_glossary[cfginfo_list->entries[t].iprogram_index], i+1, cfginfo_list->entries[t].cwd, (strlen(cfginfo_list->entries[t].comm) > 1) ? "\"" : "-");
+                                if (strlen(cfginfo_list->entries[t].comm) > 1)
+                                        printf("%s", cfginfo_list->entries[t].comm);
 
-			if (strncmp(cfginfo_list->entries[t].cmdlargs, "", 1) != 0)
-				printf(" %s", cfginfo_list->entries[t].cmdlargs);
+			        if (strncmp(cfginfo_list->entries[t].cmdlargs, " ", 1) != 0)
+			        	printf("%s%s\"", (strlen(cfginfo_list->entries[t].cmdlargs) > 1) ? " " : "", cfginfo_list->entries[t].cmdlargs);
 
-			printf("\"\n");
+                                printf("\n");
+                        }
+
 			i++;
 
 		} else {
-			printf("Tab %d (%s): \"%s", r + 1, cfginfo_list->entries[t].cwd, cfginfo_list->entries[t].comm);
+                        if (~actions & TBM_SILENT) {
+			        printf("Tab %d (%s): %s", r+1, cfginfo_list->entries[t].cwd, (strlen(cfginfo_list->entries[t].comm) > 1 ? "\"" : "-"));
 
-			if (strncmp(cfginfo_list->entries[t].cmdlargs, "", 1) != 0)
-				printf(" %s", cfginfo_list->entries[t].cmdlargs);
+                                if (strlen(cfginfo_list->entries[t].comm) > 1)
+                                        printf("%s", cfginfo_list->entries[t].comm);
 
-			printf("\"\n");
+			        if (strncmp(cfginfo_list->entries[t].cmdlargs, " ", 1) != 0)
+			        	printf("%s%s\"", (strlen(cfginfo_list->entries[t].cmdlargs) > 1) ? " " : "", cfginfo_list->entries[t].cmdlargs);
+
+			        printf("\n");
+                        }
 			r++;
 
-			// Switch-case below is used for obtaining metadata pertaining interactive programs
+			// Obtain metadata pertaining to interactive programs
 			switch (is_iprogram(cfginfo_list->entries[t].comm, false)) {
 				case 0:
 					tmux_socket_path = extract_tbm_entry_field_str(cfginfo_list->entries[t].metadata, PATH_MAX + 12, "socket_path:"); 

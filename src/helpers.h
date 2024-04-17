@@ -8,7 +8,7 @@ typedef enum {
 } tbmark_supported_iprograms;
 
 // Dedicated function pointers for arguments of a specific type
-typedef char *(*fp_interactive_progs_int)(int cfg_fd);
+typedef char *(*fp_interactive_progs_int)(int cfg_fd, enum tbm_actions actions);
 typedef char *(*fp_interactive_progs_str)(char *str);
 extern const char *iprograms[INTERACTIVE_PROGRAMS_COUNT];
 extern const char *iprogram_glossary[INTERACTIVE_PROGRAMS_COUNT];

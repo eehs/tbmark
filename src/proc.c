@@ -79,30 +79,26 @@ Window get_proc_window_id(pid_t pid) {
         return (Window)atoi(window_id_str + 9);
 }
 
-int get_proc_info(pid_t pid, PIDInfo *result) {
-	ASSERT_RET(get_proc_stat(pid, result) != -1);
-	ASSERT_RET(get_proc_cmdargs(pid, result) != -1);
-
-	return 0;
-}
-
-int get_terminal_emu_and_proc_info(PIDInfoArr **ttabs, int cfg_fd, pid_t ppid, enum tbm_flags flags) {
+int get_terminal_emu_and_proc_info(PIDInfoArr **ttabs, int cfg_fd, pid_t ppid, enum tbm_actions actions) {
 	PIDInfo shell_pinfo, terminal_pinfo, real_pinfo;
 
 	ASSERT_RET(get_proc_stat(ppid, &shell_pinfo) != -1);
 	ASSERT_RET(get_proc_stat(shell_pinfo.ppid, &terminal_pinfo) != -1);
 
+        if (~actions & TBM_SILENT)
+                DEBUG("Obtaining shell process information");
+
 	// If program is ran with superuser privileges (sudo), we traverse one layer deeper in the process tree 
 	if (getuid() != 0) {
-		if (~flags & TBM_SILENT)
-			printf("\nTerminal Emulator: %s (%d)\n", terminal_pinfo.comm, terminal_pinfo.pid);
+		if (~actions & TBM_SILENT)
+			printf("\n%d (%s) ", terminal_pinfo.pid, terminal_pinfo.comm);
 
-		return get_proc_info_ttabs(ttabs, cfg_fd, terminal_pinfo.pid, ppid, flags);
+		return get_proc_info_ttabs(ttabs, cfg_fd, terminal_pinfo.pid, ppid, actions);
 
 	} else {
 		ASSERT_RET(get_proc_stat(terminal_pinfo.ppid, &real_pinfo) != -1);
 
-		return get_proc_info_ttabs(ttabs, cfg_fd, real_pinfo.ppid, real_pinfo.pid, flags);
+		return get_proc_info_ttabs(ttabs, cfg_fd, real_pinfo.ppid, real_pinfo.pid, actions);
 	}
 }
 
@@ -181,17 +177,24 @@ int getpid_of_tabs(PIDInfoArr **ttabs, pid_t ppid, pid_t mypid) {
 	return 0;
 }
 
-int get_proc_info_ttabs(PIDInfoArr **ttabs, int cfg_fd, pid_t term_pid, pid_t ppid, enum tbm_flags flags) {
+int get_proc_info_ttabs(PIDInfoArr **ttabs, int cfg_fd, pid_t term_pid, pid_t ppid, enum tbm_actions actions) {
 	ASSERT_RET(getpid_of_tabs(ttabs, term_pid, ppid) != -1);
 
 	PIDInfoArr *terminal_tabs = *ttabs;
 
-	if (~flags & TBM_SILENT)
-		printf("Child PIDs: %ld\n\nParent\n------\n%d\n", terminal_tabs->pidlist_len, term_pid);
+	if (~actions & TBM_SILENT && ~actions & TBM_CALLED_FROM_IPROG)
+		printf("[%ld]\n", terminal_tabs->pidlist_len);
 
 	for (int i = 0; i < terminal_tabs->pidlist_len; i++) {
-		if (~flags & TBM_SILENT)
+                if (~actions & TBM_SILENT) {
+                        if (i > 0 && ~actions & TBM_CALLED_FROM_IPROG)
+                                printf("\n");
+
+                        if (actions & TBM_CALLED_FROM_IPROG)
+                                printf("        ");
+
 			printf("  \u21b3 ");
+                }
 
 		ASSERT_RET(get_proc_stat(terminal_tabs->pidlist[i].pid, &terminal_tabs->pidlist[i]) != -1);
 
@@ -199,15 +202,15 @@ int get_proc_info_ttabs(PIDInfoArr **ttabs, int cfg_fd, pid_t term_pid, pid_t pp
 		PIDInfoArr *cttabs;
 		ASSERT_RET(getpid_of_tabs(&cttabs, terminal_tabs->pidlist[i].pid, 0) != -1);
 
-		if (~flags & TBM_SILENT)
+		if (~actions & TBM_SILENT)
 			printf("%d (%s) [%ld]\n", terminal_tabs->pidlist[i].pid, terminal_tabs->pidlist[i].comm, cttabs->pidlist_len);
 		
-        	get_proc_info_cttabs(cfg_fd, terminal_tabs->pidlist[i], cttabs, flags);
+                get_proc_info_cttabs(cfg_fd, terminal_tabs->pidlist[i], cttabs, actions);
 
 		free(cttabs->pidlist);
 		free(cttabs);
 	}
-
+        
 	return 0;
 }
 
@@ -216,16 +219,19 @@ int get_proc_info_ttabs(PIDInfoArr **ttabs, int cfg_fd, pid_t term_pid, pid_t pp
 static int indentation_counter = 0;
 
 // Logging of terminal tab programs occur here 
-void get_proc_info_cttabs(int cfg_fd, PIDInfo shell, PIDInfoArr *child, enum tbm_flags flags) {
+void get_proc_info_cttabs(int cfg_fd, PIDInfo shell, PIDInfoArr *child, enum tbm_actions actions) {
 	char buf[TBMARK_SINGLE_ENTRY_SIZE];
 
-	if (~flags & TBM_SILENT) {
+	if (~actions & TBM_SILENT) {
 		if (child->has_children) {
+                        if (actions & TBM_CALLED_FROM_IPROG)
+                                printf("        ");
+
 			for (int i = 0; i <= indentation_counter; i++) {
 				printf("      ");
                         }
 
-			printf("\u21b3  ");
+			printf("\u21b3 ");
 		} else {
 			indentation_counter = (!child->has_children) ? 0 : indentation_counter + 1;
                 }
@@ -235,27 +241,27 @@ void get_proc_info_cttabs(int cfg_fd, PIDInfo shell, PIDInfoArr *child, enum tbm
         pid_t pid = child->pidlist[0].pid;
         pid_t ppid = shell.pid;
         char *cwd = (!pid) ? shell.cwd : child->pidlist[0].cwd;
-        char *cmdlargs = (!pid) ? "" : child->pidlist[0].cmdlargs;
+        char *cmdlargs = (!pid) ? " " : child->pidlist[0].cmdlargs;
 
         if (pid) {
                	get_proc_stat(pid, &child->pidlist[0]);
                 get_proc_cmdargs(pid, &child->pidlist[0]);
 
-	        if (~flags & TBM_SILENT)
+	        if (~actions & TBM_SILENT)
 	        	printf("%d (%s)\n", pid, cmdlargs);
         }
 
 	// Log to tbmark config file (each 'iprogram' handles their own output formatting) 
-	if (flags & TBM_RDWR_PIDINFO) {
+	if (actions & TBM_RDWR_PIDINFO) {
 		int iprogram_index = 0;
 		char *iprogram_metadata = NULL;
 
 		// NOTE: So no infinite loops arise
-		if (~flags & TBM_CALLED_FROM_IPROG) {
+		if (~actions & TBM_CALLED_FROM_IPROG) {
 			iprogram_index = is_iprogram(cmdlargs, true);
 			if (iprogram_index != -1) {
 				// All iprogram logger functions must return a buffer containing its program information, which we then use to concatenate to the main tbmark entry buf 
-				iprogram_metadata = iprogram_loggers[iprogram_index](cfg_fd);
+				iprogram_metadata = iprogram_loggers[iprogram_index](cfg_fd, actions);
                         }
 		}
 
