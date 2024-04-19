@@ -56,7 +56,7 @@ int tbm_save(const char *filename, enum tbm_options options) {
         	snprintf(cfgpath, PATH_MAX, "%s/tbmark.cfg", cfgdir);
         }
 
-        printf("Saving terminal tabs to '%s'", cfgpath);
+        printf("Saving terminal tabs to '%s'\n", cfgpath);
 
 	ASSERT_RET((cfg_create(cfgpath)) != -1);
 	ASSERT_RET((cfg_fd = cfg_open(cfgpath)) != -1);
@@ -73,8 +73,6 @@ int tbm_save(const char *filename, enum tbm_options options) {
                 printf("\n");
                 DEBUG("Gathering information on terminal tab and interactive programs");
         }
-
-	printf("\n");
 
 	free(ttabs->pidlist);
 	free(ttabs);
