@@ -9,8 +9,6 @@
 #define CHILD_MAX                               sysconf(_SC_CHILD_MAX)
 #define PID_MAX_LEN                             7
 #define COMM_MAX_LEN                            17
-#define PIPE_RD                                 0
-#define PIPE_WR                                 1
 
 #define INTERACTIVE_PROGRAMS_COUNT              1
 #define TBMARK_SINGLE_ENTRY_SIZE                4096

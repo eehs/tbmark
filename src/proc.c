@@ -13,7 +13,7 @@
 #include "helpers.h"
 #include "debug.h"
 
-int get_proc_stat(pid_t pid, PIDInfo *status_result) {
+int get_proc_stat(pid_t pid, PIDInfo *statusOut) {
 	char procfs_status_buf[1024];
 	char stat_path[PATH_MAX], cwd_path[PATH_MAX];
 	int statfd, bytes_read, items;
@@ -31,15 +31,15 @@ int get_proc_stat(pid_t pid, PIDInfo *status_result) {
 	}
 
 	items = sscanf(procfs_status_buf, "%d (%16[^)]) %c %d %d %d %lu", 
-			&status_result->pid, status_result->comm, &status_result->state,
-			&status_result->ppid, &status_result->sid, &status_result->pgid, &status_result->ctty);
+			&statusOut->pid, statusOut->comm, &statusOut->state,
+			&statusOut->ppid, &statusOut->sid, &statusOut->pgid, &statusOut->ctty);
 	if (items != 7) {
 		close(statfd);
 		ASSERT_RET(false);
 	}
 
 	snprintf(cwd_path, PATH_MAX, "/proc/%d/cwd", pid);
-	getcwd_res = readlink(cwd_path, status_result->cwd, sizeof(status_result->cwd));
+	getcwd_res = readlink(cwd_path, statusOut->cwd, sizeof(statusOut->cwd));
 	if (getcwd_res < 0) {
 		close(statfd);
 		ASSERT_RET(false);
@@ -48,7 +48,7 @@ int get_proc_stat(pid_t pid, PIDInfo *status_result) {
 	return 0;
 }
 
-int get_proc_cmdargs(pid_t pid, PIDInfo *cmdargs_result) {
+int get_proc_cmdargs(pid_t pid, PIDInfo *cmdargsOut) {
 	PIDInfo procfs_cmdargs_buf;
 	pid_t shell_pid;
 	char extract_cmdargs[PATH_MAX + 100];
@@ -60,7 +60,7 @@ int get_proc_cmdargs(pid_t pid, PIDInfo *cmdargs_result) {
 	// Capture output of parsed '/proc/[pid]/cmdline'
 	snprintf(extract_cmdargs, sizeof(extract_cmdargs), "tr '\\0' ' ' < /proc/%d/cmdline", pid);
 
-	extract_cmdargs_res = exec_and_capture_output(extract_cmdargs, cmdargs_result->cmdlargs);
+	extract_cmdargs_res = exec_and_capture_output(extract_cmdargs, cmdargsOut->cmdlargs);
 	ASSERT_RET(extract_cmdargs_res != -1);
 
 	return 0;
@@ -360,7 +360,7 @@ void get_proc_info_cttabs(int cfg_fd, PIDInfo shell, PIDInfoArr *child, enum tbm
         }
 }
 
-int write_proc_stdin(pid_t pid, const char *cmd, size_t cmd_len) {
+int write_proc_stdin(pid_t pid, const char *cmd, size_t cmdLen) {
 	int fd;
 	char fdpath[PATH_MAX];
 	fd_set rfds;
@@ -380,7 +380,7 @@ int write_proc_stdin(pid_t pid, const char *cmd, size_t cmd_len) {
 
        	if (FD_ISSET(fd, &rfds)) {
 		// Don't write NULL byte to stdin
-		for (int i = 0; i < cmd_len; i++) {
+		for (int i = 0; i < cmdLen; i++) {
 			ASSERT_EXIT(ioctl(fd, TIOCSTI, &cmd[i]) != -1);
 		}
 	} 
