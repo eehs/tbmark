@@ -22,8 +22,8 @@ typedef struct {
 } CfgInfoArr;
 
 // Takes in a buffer containing file contents and returns the tbmark entry field
-char *extract_tbm_entry_field_str(const char *buf, size_t max_tag_and_value_len, char *tag);
-int extract_tbm_entry_field_int(const char *buf, size_t max_tag_and_value_len, char *tag);
+char *extract_tbm_entry_field_str(const char *buf, size_t maxTagAndValueLen, char *tag);
+int extract_tbm_entry_field_int(const char *buf, size_t maxTagAndValueLen, char *tag);
 
 char *strip_args_from_cmd(const char *cmd);
 

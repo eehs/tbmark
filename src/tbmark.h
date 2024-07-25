@@ -8,7 +8,7 @@
 
 int tbm_index(enum tbm_options option);
 int tbm_save(const char *filename, enum tbm_options flags);
-int tbm_open(const char *filename, enum tbm_options flags);
+int tbm_restore(const char *filename, enum tbm_options flags);
 int tbm_list(const char *filename, enum tbm_options flags);
 
 // Basically atoi(cmdarg)
@@ -24,6 +24,6 @@ option_int_map tbm_subcmd_table[] = {
 };
 
 typedef int (*tbm_func)(const char *filename, enum tbm_options flags);
-tbm_func tbm_func_table[] = { tbm_save, tbm_open, tbm_list };
+tbm_func tbm_func_table[] = { tbm_save, tbm_restore, tbm_list };
 
 #endif // TBMARK_MAIN_H

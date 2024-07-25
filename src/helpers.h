@@ -16,15 +16,16 @@ extern fp_interactive_progs_int iprogram_loggers[INTERACTIVE_PROGRAMS_COUNT];
 extern fp_interactive_progs_str iprogram_parsers[INTERACTIVE_PROGRAMS_COUNT];
 
 // Returns index to 'iprograms' on successful match of substring
-int is_iprogram(const char *cmdlargs, bool saving_tabs);
+int is_iprogram(const char *cmdlargs, bool savingTabs);
 char *get_iprogram_name(int index);
 
 bool has_cfg_suffix(const char *filename);
 bool running_as_root();
 char *get_homedir_of_user();
-int exec_and_capture_output(const char *cmd_in, char *cmd_out);
-char **split(char *str, char delim, size_t max_arr_len, size_t *out_arr_len);
+int exec_and_capture_output(const char *cmdIn, char *cmdOut);
+char **split(char *str, char delim, size_t maxArrLen, size_t *outArrLen);
 int format_tbmark_cfg(char *path);
-void free_str_arr(char **arr, size_t arr_len);
+void print_cfg_tabs_from_fd(int fd, bool showDebug, const char *filename, bool getInteractiveProgramMetadata, char **tmuxSocketPath, int *tmuxPaneCount);
+void free_str_arr(char **arr, size_t arrLen);
 
 #endif // TBMARK_HELPERS_H

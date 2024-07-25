@@ -85,7 +85,7 @@ int tbm_save(const char *filename, enum tbm_options options) {
 }
 
 // Must be executed with root privileges (direct write to process stdin) 
-int tbm_open(const char *filename, enum tbm_options options) {
+int tbm_restore(const char *filename, enum tbm_options options) {
 	pid_t ppid;
 	char *cwd;
         regex_t userhome_regex;
@@ -164,6 +164,16 @@ int tbm_open(const char *filename, enum tbm_options options) {
 }
 
 int tbm_list(const char *filename, enum tbm_options options) {
+        int fd;
+
+        if (filename == NULL) {
+		ERROR("Feed me a config file!");
+                exit(1);
+        }
+
+        fd = cfg_open(filename);
+        print_cfg_tabs_from_fd(fd, true, filename, false, NULL, (int *)-1);
+
         return 0;
 }
 

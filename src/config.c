@@ -17,18 +17,18 @@
 
 //#define DEBUG
 
-char *extract_tbm_entry_field_str(const char *buf, size_t max_tag_and_value_len, char *tag) {
+char *extract_tbm_entry_field_str(const char *buf, size_t maxTagAndValueLen, char *tag) {
 	char *substr_ptr = strstr(buf, tag);
-	char *field_value = calloc(max_tag_and_value_len, sizeof(char));
+	char *field_value = calloc(maxTagAndValueLen, sizeof(char));
 	int tag_len = strnlen(tag, MAX_TAG_LEN);
 
 	if (substr_ptr != NULL) {
 		// Store the string that comes after tag
-	        snprintf(field_value, max_tag_and_value_len, "%.*s\n", 
-				(int)strnlen(substr_ptr, max_tag_and_value_len) - tag_len,
+	        snprintf(field_value, maxTagAndValueLen, "%.*s\n", 
+				(int)strnlen(substr_ptr, maxTagAndValueLen) - tag_len,
 				substr_ptr + tag_len);
 
-		for (int i = 0; i < strnlen(field_value, max_tag_and_value_len); i++) {
+		for (int i = 0; i < strnlen(field_value, maxTagAndValueLen); i++) {
         		// Stop string at current element if we hit a newline character, OR if the supplied tags != [cmdlargs, tmux, and if a whitespace character was hit] 
         		if (field_value[i] == '\n' || (strncmp(tag, "cmdlargs:", 9) != 0 && strncmp(tag, "[tmux] ", 6) != 0 && field_value[i] == ' ')) {
 	        		field_value[i] = '\0';
@@ -43,19 +43,19 @@ char *extract_tbm_entry_field_str(const char *buf, size_t max_tag_and_value_len,
 	return NULL;
 }
 
-int extract_tbm_entry_field_int(const char *buf, size_t max_tag_and_value_len, char *tag) {
+int extract_tbm_entry_field_int(const char *buf, size_t maxTagAndValueLen, char *tag) {
 	char *substr_ptr = strstr(buf, tag);
-	char *field_value = calloc(max_tag_and_value_len, sizeof(char));
+	char *field_value = calloc(maxTagAndValueLen, sizeof(char));
 	int field_value_int;
 	int tag_len = strnlen(tag, MAX_TAG_LEN);
 
 	// Store the string that comes after tag
-        snprintf(field_value, max_tag_and_value_len, "%.*s\n", 
-			(int)strnlen(substr_ptr, max_tag_and_value_len) - tag_len,
+        snprintf(field_value, maxTagAndValueLen, "%.*s\n", 
+			(int)strnlen(substr_ptr, maxTagAndValueLen) - tag_len,
 			substr_ptr + tag_len);
 
 	if (substr_ptr != NULL) {
-		for (int i = 0; i < strnlen(field_value, max_tag_and_value_len); i++) {
+		for (int i = 0; i < strnlen(field_value, maxTagAndValueLen); i++) {
 			// Generic formatting and cleanup of the matched string, since it may contain stray newline and whitespace characters (we don't want them when writing to our tbmark config file) 
 			if (field_value[i] == '\n' || (strncmp(tag, "cmdlargs:", 9) != 0 && field_value[i] == ' ')) {
 				field_value[i] = '\0';
@@ -82,7 +82,7 @@ char *strip_args_from_cmd(const char *cmd) {
         regmatch_t strip_delim_index;
         int status;
 
-        // NOTE: This hack might not be defined behaviour, should be looked into deeper 
+        // FIXME: This is undefined behaviour, which actually causes a segfault, should be looked into further 
         ASSERT_NULL(regcomp(&strip_delim_regex, "(.*)>", REG_EXTENDED) == 0);
         ASSERT_NULL((status = regexec(&strip_delim_regex, cmd, 1, &strip_delim_index, 0)) != REG_NOMATCH);
 
@@ -157,7 +157,7 @@ CfgInfoArr *cfg_parse(int fd) {
 
                         free(stripped_args);
 
-                } else if (strlen(comm) > 1 && !strlen(args)) {
+                } else if (strlen(comm) > 1 && strlen(args) == 0) {
                         // Equivalent to a terminal tab with a command and no arguments 
                         comm[strlen(comm) - 1] = '\0';
 
@@ -233,62 +233,19 @@ int cfg_exec(int fd, pid_t ppid, CfgInfoArr *cfginfo_list, enum tbm_actions acti
 
 	// tmux specific variables 
 	int tmux_pane_id = 0, tmux_pane_count;
-	char *tmux_socket_path;
+	char *tmux_socket_path = calloc(PATH_MAX, sizeof(char));
 
 	PIDInfoArr *ttabs_list;
 	int normal_prog_counter = 0; // Since 'iprograms' may include panes containing programs such as tmux, we keep a counter over the 'regular' programs
 
-	if (!cfginfo_list->entries_len)
-		printf("No tabs were saved.\n");
-
-	// t (index for all tbmark entries), i (index for iprogram-specific windows/structures only), r (index for regular programs only) 
-        int t = 0, i = 0, r = 0;
-	for (; t < cfginfo_list->entries_len; t++) {
-		// 'iprogram' tabs are formatted here + iprogram-specific metadata assignment to their respective variables 
-		if (strlen(cfginfo_list->entries[t].iprogram_name) > 0) {
-                        if (~actions & TBM_SILENT) {
-			        printf(" ↳ %s %d (%s): %s", iprogram_glossary[cfginfo_list->entries[t].iprogram_index], i+1, cfginfo_list->entries[t].cwd, (strlen(cfginfo_list->entries[t].comm) > 1) ? "\"" : "-");
-                                if (strlen(cfginfo_list->entries[t].comm) > 1)
-                                        printf("%s", cfginfo_list->entries[t].comm);
-
-			        if (strncmp(cfginfo_list->entries[t].cmdlargs, " ", 1) != 0)
-			        	printf("%s%s\"", (strlen(cfginfo_list->entries[t].cmdlargs) > 1) ? " " : "", cfginfo_list->entries[t].cmdlargs);
-
-                                printf("\n");
-                        }
-
-			i++;
-
-		} else {
-                        if (~actions & TBM_SILENT) {
-			        printf("Tab %d (%s): %s", r+1, cfginfo_list->entries[t].cwd, (strlen(cfginfo_list->entries[t].comm) > 1 ? "\"" : "-"));
-
-                                if (strlen(cfginfo_list->entries[t].comm) > 1)
-                                        printf("%s", cfginfo_list->entries[t].comm);
-
-			        if (strncmp(cfginfo_list->entries[t].cmdlargs, " ", 1) != 0)
-			        	printf("%s%s\"", (strlen(cfginfo_list->entries[t].cmdlargs) > 1) ? " " : "", cfginfo_list->entries[t].cmdlargs);
-
-			        printf("\n");
-                        }
-			r++;
-
-			// Obtain metadata pertaining to interactive programs
-			switch (is_iprogram(cfginfo_list->entries[t].comm, false)) {
-				case 0:
-					tmux_socket_path = extract_tbm_entry_field_str(cfginfo_list->entries[t].metadata, PATH_MAX + 12, "socket_path:"); 
-					tmux_pane_count = extract_tbm_entry_field_int(cfginfo_list->entries[t].metadata, 12, "pane_count:"); 
-					break;
-			}
-		}
-	}
+        print_cfg_tabs_from_fd(fd, false, NULL, true, &tmux_socket_path, &tmux_pane_count);
 
         // We escape special characters found in CLI arguments here 
         char *escaped_cmdlargs, special_chars[18] = "&*{}[]<>,=-().+;'/";
         for (int i = 0; i < cfginfo_list->entries_len; i++) {
                 for (int j = 0; j < 18; j++) {
                         if (strchr(cfginfo_list->entries[i].cmdlargs, special_chars[j]) != NULL) {
-                                escaped_cmdlargs = calloc(strlen(cfginfo_list->entries[i].cmdlargs), sizeof(char));
+                                escaped_cmdlargs = calloc(ARG_MAX, sizeof(char));
 
                                 snprintf(escaped_cmdlargs, strlen(cfginfo_list->entries[i].cmdlargs) + 3, "'%s'", cfginfo_list->entries[i].cmdlargs);
                                 strncpy(cfginfo_list->entries[i].cmdlargs, escaped_cmdlargs, ARG_MAX);
@@ -313,7 +270,7 @@ int cfg_exec(int fd, pid_t ppid, CfgInfoArr *cfginfo_list, enum tbm_actions acti
 				tmux_pane_metadata = populate_tmux_pane_metadata(cfginfo_list->entries[cfg_entry_index].iprogram_info);
 				ASSERT_RET(tmux_pane_metadata != NULL);
 
-				first_tmux_pane_metadata_pid = malloc(PID_MAX_LEN * sizeof(char));
+				first_tmux_pane_metadata_pid = calloc(PID_MAX_LEN, sizeof(char));
 				if (first_tmux_pane_metadata_pid == NULL) {
 					free(tmux_pane_metadata);
 					return -1;
