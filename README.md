@@ -8,7 +8,7 @@ https://github.com/eehs/tbmark/assets/70907396/1f761572-77af-47fb-887b-cb8a055af
 The main motivation behind this project was to boost productivity since my workflow usually involves multiple opened tabs, and for learning purposes of course! Any form of feedback is thus greatly appreciated!
 
 > [!IMPORTANT]
-> **tbmark** is meant to be used in a *desktop* environment on Linux. Do note only a handful of terminal programs are supported at the moment due to varying program semantics. This is also largely due to the fact **tbmark** is a personal project.
+> **tbmark** is meant to be used in a *desktop* environment on Linux, with support for the X11 windowing system. Do note only a handful of terminal programs are supported at the moment due to varying program semantics. This is also largely due to the fact **tbmark** is a *personal* project. (a heads-up for some ugly code you might potentially come across)
 
 Installation
 ============
@@ -37,8 +37,10 @@ Available options:
 
 TODO
 ====
-- [ ] Add a `list` subcommand that displays saved terminal tabs from their config files
+- [ ] Save terminal tab titles. (if any)
 - [ ] Assign more helpful error messages
+- [ ] Add shell completion support for subcommands
+- [ ] Update demo video
 - [ ] Make `tbmark` aware of piped commands
 - [ ] Find a way to capture and restore output buffer of saved terminal tabs
 - [ ] Get rid of the horrible hardcoded mess when restoring terminal tabs using `tmux` panes (create a custom `tmux` command builder)
