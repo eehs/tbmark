@@ -11,8 +11,8 @@ typedef struct {
 	char comm[COMM_MAX_LEN];
 	char cmdlargs[ARG_MAX];
 	char metadata[ARG_MAX];
-	char iprogram_name[COMM_MAX_LEN];
-	char iprogram_info[IPROG_INFO_SIZE];
+	char iprogram_name[COMM_MAX_LEN + 1];
+	char iprogram_info[IPROG_INFO_SIZE + 1];
 	int iprogram_index;
 } CfgInfo;
 

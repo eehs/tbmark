@@ -207,7 +207,7 @@ CfgInfoArr *cfg_parse(int fd) {
 
 		if (iprogram_index != -1) {
 			strncpy(cfginfo_list->entries[i].iprogram_name, iprog_name, COMM_MAX_LEN);
-			strncpy(cfginfo_list->entries[i].iprogram_info, iprog_info, strlen(iprog_info));
+			strncpy(cfginfo_list->entries[i].iprogram_info, iprog_info, IPROG_INFO_SIZE);
 			cfginfo_list->entries[i].iprogram_index = iprogram_index;
 		} else {
 			cfginfo_list->entries[i].iprogram_index = -1;
@@ -235,7 +235,6 @@ int cfg_exec(int fd, pid_t ppid, CfgInfoArr *cfginfo_list, enum tbm_actions acti
 	int tmux_pane_id = 0, tmux_pane_count;
 	char *tmux_socket_path = calloc(PATH_MAX, sizeof(char));
 
-	PIDInfoArr *ttabs_list;
 	int normal_prog_counter = 0; // Since 'iprograms' may include panes containing programs such as tmux, we keep a counter over the 'regular' programs
 
         print_cfg_tabs_from_fd(fd, false, NULL, true, &tmux_socket_path, &tmux_pane_count);
@@ -287,7 +286,7 @@ int cfg_exec(int fd, pid_t ppid, CfgInfoArr *cfginfo_list, enum tbm_actions acti
 				// TODO: Support more pane layouts (current approach for re-opening tmux panes isn't really scalable)
 
 			        // Execute command in tbmark entry 
-				int active_pane_id;
+				int active_pane_id = 0;
 				char TMUX_SELECT_PANE_CMD[ARG_MAX];
 
 				// Store active pane id in a temporary variable
@@ -522,6 +521,7 @@ int cfg_exec(int fd, pid_t ppid, CfgInfoArr *cfginfo_list, enum tbm_actions acti
 				// TODO: Find a better way to determine if a terminal window has opened
 				usleep(700000);
 		
+	                        PIDInfoArr *ttabs_list;
 			        ASSERT_RET(get_terminal_emu_and_proc_info(&ttabs_list, fd, ppid, TBM_SILENT) != -1);
 
 			        // Execute command in tbmark entry 
