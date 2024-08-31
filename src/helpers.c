@@ -168,7 +168,7 @@ int format_tbmark_cfg(char *path) {
 			for (int j = 0; j < strlen(delim); j++) {
 				if (entries_arr[i][j] != delim[j]) {
 					strncat(entries_arr[i], "\n", 2);
-					strncat(updated_entries, entries_arr[i], strlen(entries_arr[i]));
+					strncat(updated_entries, entries_arr[i], strnlen(entries_arr[i], 8092));
 					break;
 				}
 			}
@@ -204,7 +204,7 @@ void print_cfg_tabs_from_fd(int fd, bool showDebug, const char *filename, bool g
                                 printf("%s", cfg_entries->entries[t].comm);
 
                         if (strncmp(cfg_entries->entries[t].cmdlargs, " ", 1) != 0)
-                                printf("%s%s\"", (strlen(cfg_entries->entries[t].cmdlargs) > 1) ? " " : "", cfg_entries->entries[t].cmdlargs);
+                                printf("%s%s\"", (strlen(cfg_entries->entries[t].cmdlargs) >= 1) ? " " : "", cfg_entries->entries[t].cmdlargs);
 
                         printf("\n");
                         i++;
@@ -215,7 +215,7 @@ void print_cfg_tabs_from_fd(int fd, bool showDebug, const char *filename, bool g
                                 printf("%s", cfg_entries->entries[t].comm);
 
                         if (strncmp(cfg_entries->entries[t].cmdlargs, " ", 1) != 0)
-                                printf("%s%s\"", (strlen(cfg_entries->entries[t].cmdlargs) > 1) ? " " : "", cfg_entries->entries[t].cmdlargs);
+                                printf("%s%s\"", (strlen(cfg_entries->entries[t].cmdlargs) >= 1) ? " " : "", cfg_entries->entries[t].cmdlargs);
 
                         printf("\n");
                         r++;
