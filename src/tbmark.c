@@ -37,21 +37,25 @@ int tbm_index(enum tbm_options options) {
 }
 
 int tbm_save(const char *filename, enum tbm_options options) {
-	char cfgdir[PATH_MAX - FILE_NAME_MAX_LEN], cfgpath[PATH_MAX];
+	char cfgdir[PATH_MAX - FILE_NAME_MAX_LEN];
 	int cfg_fd;
 
 	// Create config file and start logging terminal info to it 
         snprintf(cfgdir, PATH_MAX - FILE_NAME_MAX_LEN, "%s/%s", get_homedir_of_user(getuid()), TBMARK_DIRNAME);
         mkdir(cfgdir, 0700);
 
-        if (filename != NULL) {
-                char filtered_filename[strlen(filename)];
-                strcpy(filtered_filename, filename);
-                
-                if (has_cfg_suffix(filename))
-                        filtered_filename[strlen(filtered_filename) - 4] = '\0';
+        size_t filename_len = strnlen(filename, FILE_NAME_MAX_LEN);
+        char cfgpath[(PATH_MAX - FILE_NAME_MAX_LEN) + filename_len + PATH_MAX + 1];
 
-        	snprintf(cfgpath, PATH_MAX, "%s/%s.cfg", cfgdir, filtered_filename);
+        if (filename != NULL) {
+                char filtered_filename[filename_len + 1];
+                strncpy(filtered_filename, filename, filename_len);
+                
+                if (has_cfg_suffix(filename)) {
+                        filtered_filename[filename_len - 4] = '\0';
+                }
+
+        	snprintf(cfgpath, (PATH_MAX - FILE_NAME_MAX_LEN) + strlen(filtered_filename) + PATH_MAX, "%s/%s.cfg", cfgdir, filtered_filename);
         } else {
         	snprintf(cfgpath, PATH_MAX, "%s/tbmark.cfg", cfgdir);
         }
