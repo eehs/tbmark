@@ -149,27 +149,29 @@ int getpid_of_tabs(PIDInfoArr **ttabs, pid_t ppid, pid_t mypid) {
 		childpid_str = strtok_r(temp, " ", &temp);
 	}
 
-        // We move data in the placeholder to our main array
 	*ttabs = calloc(1, sizeof(PIDInfoArr));
 	if (*ttabs == NULL) {
 		free(childpid_arr);
 		return -1;
 	}
 
-	PIDInfoArr *cttabs = *ttabs;
-	cttabs->pidlist = calloc(childpid_count, sizeof(PIDInfo));
-	if (cttabs->pidlist == NULL) {
-		free(childpid_arr);
-		return -1;
-	}
+        // We set the number of children pids to 1 here if no children pid was found, which is equivalent to ONE shell program (like vim or less) being parented by a shell process
+        if (childpid_count == 0)
+                childpid_count = 1;
+
+        (*ttabs)->pidlist = calloc(childpid_count, sizeof(PIDInfo));
+        if ((*ttabs)->pidlist == NULL) {
+                free(childpid_arr);
+                return -1;
+        }
 
         // Only used for formatting when displaying saved terminal tabs (can definitely be refactored)
-	cttabs->has_children = (!bytes_read) ? false : true;
-        cttabs->pidlist_len = 0;
+        (*ttabs)->has_children = (!bytes_read) ? false : true;
+        (*ttabs)->pidlist_len = 0;
 
 	for (int i = 0; i < childpid_count; i++) {
-	        cttabs->pidlist[i].pid = childpid_arr[i];
-                cttabs->pidlist_len++;
+	        (*ttabs)->pidlist[i].pid = childpid_arr[i];
+                (*ttabs)->pidlist_len++;
 	}
 
 	free(childpid_arr);
@@ -205,7 +207,7 @@ int get_proc_info_ttabs(PIDInfoArr **ttabs, int cfg_fd, pid_t term_pid, pid_t pp
 		if (~actions & TBM_SILENT)
 			printf("%d (%s) [%ld]\n", terminal_tabs->pidlist[i].pid, terminal_tabs->pidlist[i].comm, cttabs->pidlist_len);
 		
-                get_proc_info_cttabs(cfg_fd, terminal_tabs->pidlist[i], cttabs, actions);
+                get_proc_info_cttabs(cfg_fd, terminal_tabs->pidlist[i], &cttabs, actions);
 
 		free(cttabs->pidlist);
 		free(cttabs);
@@ -215,15 +217,15 @@ int get_proc_info_ttabs(PIDInfoArr **ttabs, int cfg_fd, pid_t term_pid, pid_t pp
 }
 
 // TODO: Support logging of multiple tmux windows running simultaneously
-// Counter that controls spacing of processes' debug info output
+// Counter controlling spacing of processes' debug output
 static int indentation_counter = 0;
 
 // Logging of terminal tab programs occur here 
-void get_proc_info_cttabs(int cfg_fd, PIDInfo shell, PIDInfoArr *child, enum tbm_actions actions) {
+void get_proc_info_cttabs(int cfg_fd, PIDInfo shell, PIDInfoArr **child, enum tbm_actions actions) {
 	char buf[TBMARK_SINGLE_ENTRY_SIZE];
 
 	if (~actions & TBM_SILENT) {
-		if (child->has_children) {
+		if ((*child)->has_children) {
                         if (actions & TBM_CALLED_FROM_IPROG)
                                 printf("        ");
 
@@ -233,19 +235,19 @@ void get_proc_info_cttabs(int cfg_fd, PIDInfo shell, PIDInfoArr *child, enum tbm
 
 			printf("\u21b3 ");
 		} else {
-			indentation_counter = (!child->has_children) ? 0 : indentation_counter + 1;
+			indentation_counter = (!(*child)->has_children) ? 0 : indentation_counter + 1;
                 }
 	}
 
-        // Empty shell tabs running nothing will be saved into the auto-generated config file, alongside existing shell programs 
-        pid_t pid = child->pidlist[0].pid;
+        // Empty shell tabs running nothing are saved into the auto-generated config file, alongside shell programs 
+        pid_t pid = (*child)->pidlist[0].pid;
         pid_t ppid = shell.pid;
-        char *cwd = (!pid) ? shell.cwd : child->pidlist[0].cwd;
-        char *cmdlargs = (!pid) ? " " : child->pidlist[0].cmdlargs;
+        char *cwd = (!pid) ? shell.cwd : (*child)->pidlist[0].cwd;
+        char *cmdlargs = (!pid) ? " " : (*child)->pidlist[0].cmdlargs;
 
         if (pid) {
-               	get_proc_stat(pid, &child->pidlist[0]);
-                get_proc_cmdargs(pid, &child->pidlist[0]);
+               	get_proc_stat(pid, &(*child)->pidlist[0]);
+                get_proc_cmdargs(pid, &(*child)->pidlist[0]);
 
 	        if (~actions & TBM_SILENT)
 	        	printf("%d (%s)\n", pid, cmdlargs);
@@ -334,7 +336,7 @@ void get_proc_info_cttabs(int cfg_fd, PIDInfo shell, PIDInfoArr *child, enum tbm
 											tbmark_cfg_entries[k] + (6 + strlen(tbmark_cfg_entries_pid)), 
 											tmux_panes_arr[j] + (10 + strlen(tbmark_cfg_entries_pid)));
 
-									strncat(buf, tmux_buf, strlen(tmux_buf));
+									strncat(buf, tmux_buf, strnlen(tmux_buf, IPROG_INFO_SIZE));
 								}
 
 								free(tbmark_cfg_entries_pid);

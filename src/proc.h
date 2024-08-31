@@ -32,7 +32,7 @@ int getpid_of_tabs(PIDInfoArr **ttabs, pid_t ppid, pid_t mypid);
 int get_proc_info_ttabs(PIDInfoArr **ttabs, int cfg_fd, pid_t term_pid, pid_t ppid, enum tbm_actions actions);
 
 // PID of the actual shell programs running
-void get_proc_info_cttabs(int cfg_fd, PIDInfo shell, PIDInfoArr *child, enum tbm_actions actions);
+void get_proc_info_cttabs(int cfg_fd, PIDInfo shell, PIDInfoArr **child, enum tbm_actions actions);
 int write_proc_stdin(pid_t pid, const char *cmd, size_t cmdLen);
 
 #endif // TBMARK_PROC_H
