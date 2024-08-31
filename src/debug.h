@@ -4,7 +4,7 @@
 #include <errno.h>
 
 char *strerror(int errnum);
-void printf_with_prefix(const char *prefix, const char *msg, va_list vargs);
+void print_with_prefix(const char *prefix, const char *msg, va_list vargs);
 
 #define __printf __attribute__((format(printf, 1, 2)))
 void __printf DEBUG(const char *msg, ...);
