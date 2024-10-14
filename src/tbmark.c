@@ -2,6 +2,7 @@
 #include <stdbool.h>
 #include <stdlib.h>
 #include <string.h>
+#include <fcntl.h>
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <unistd.h>
@@ -38,13 +39,13 @@ int tbm_index(enum tbm_options options) {
 
 int tbm_save(const char *filename, enum tbm_options options) {
 	char cfgdir[PATH_MAX - FILE_NAME_MAX_LEN];
-	int cfg_fd;
+	int cfg_fd = -1;
 
 	// Create config file and start logging terminal info to it 
         snprintf(cfgdir, PATH_MAX - FILE_NAME_MAX_LEN, "%s/%s", get_homedir_of_user(getuid()), TBMARK_DIRNAME);
         mkdir(cfgdir, 0700);
 
-        size_t filename_len = strnlen(filename, FILE_NAME_MAX_LEN);
+        size_t filename_len = (filename != NULL) ? strnlen(filename, FILE_NAME_MAX_LEN) : FILE_NAME_MAX_LEN;
         char cfgpath[(PATH_MAX - FILE_NAME_MAX_LEN) + filename_len + PATH_MAX + 1];
 
         if (filename != NULL) {
@@ -59,11 +60,20 @@ int tbm_save(const char *filename, enum tbm_options options) {
         } else {
         	snprintf(cfgpath, PATH_MAX, "%s/tbmark.cfg", cfgdir);
         }
+        
+        // Prevent overwriting existing config files
+        cfg_fd = open(cfgpath, O_CREAT | O_EXCL | O_TRUNC, S_IRUSR | S_IWUSR);
+        if (cfg_fd == -1 && errno == EEXIST) {
+                ERROR("'%s' already exists!", cfgpath);
+                exit(1);
+        }
 
         printf("Saving terminal tabs to '%s'\n", cfgpath);
 
-	ASSERT_RET((cfg_create(cfgpath)) != -1);
-	ASSERT_RET((cfg_fd = cfg_open(cfgpath)) != -1);
+        if (cfg_fd < 0)
+	        ASSERT_RET((cfg_create(cfgpath)) != -1);
+
+       	ASSERT_RET((cfg_fd = cfg_open(cfgpath)) != -1);
 
         enum tbm_actions actions = TBM_RDWR_PIDINFO;
         if (~options & OPTION_VERBOSE)
@@ -88,7 +98,8 @@ int tbm_save(const char *filename, enum tbm_options options) {
 	return 0;
 }
 
-// Must be executed with root privileges (direct write to process stdin) 
+// NOTE: You can probably avoid this unnecessary privilege escalation by setting the appropriate capability on the tbmark binary before running, and unsetting it after
+// Must be executed with root privileges
 int tbm_restore(const char *filename, enum tbm_options options) {
 	pid_t ppid;
 	char *cwd;
