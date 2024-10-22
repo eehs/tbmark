@@ -3,12 +3,12 @@ Terminal BookMARKer
 
 https://github.com/user-attachments/assets/55f800b4-0df8-428c-a987-3e88a061b35c
 
-**Terminal BookMARKer**, or **tbmark** for short, provides a way of saving the state of opened terminal tabs to disk and restoring them at a later time. **tbmark** works exclusively on *Linux* distros with a desktop environment by obtaining terminal tab data from the *virtual proc filesystem* when saving tabs. The configuration file containing your saved terminal tabs can then be found in `~/.tbmark/`. As for the latter operation, that is restoring terminal tabs, **tbmark** makes use of [xdotool](https://github.com/jordansissel/xdotool)'s *libxdo* library to fake keyboard input and the *ioctl* interface for restoring saved terminal programs (commands sent straight to *standard input*). 
+**Terminal BookMARKer**, or **tbmark** for short, provides a way of saving the state of opened terminal tabs to disk and restoring them at a later time. **tbmark** works exclusively on *Linux* distros using the [X Window System](https://en.wikipedia.org/wiki/X_Window_System), by obtaining terminal tab data from the *virtual proc filesystem* when saving tabs. As for the latter operation, that is restoring terminal tabs, **tbmark** makes use of [xdotool](https://github.com/jordansissel/xdotool)'s *libxdo* library to fake keyboard input and the *ioctl* interface for restoring saved terminal programs (commands sent straight to *standard input*). The configuration file containing your saved terminal tabs can then be found in `~/.tbmark/`.
 
 The main motivation behind this project was to boost productivity since my workflow usually involves multiple opened tabs, and for learning purposes of course! Any form of feedback is thus greatly appreciated!
 
 > [!IMPORTANT]
-> **tbmark** is meant to be used in a *desktop* environment on Linux. Do note that if you have a different bind for opening new tabs in your terminal program, **tbmark** might not be able to restore tabs properly (uses `Ctrl+Shift+T` by default). This project is largely specific (to my use case) and experimental, so do expect some bugs and ugly-looking code for the time being.
+> **tbmark** is meant to be used in a *desktop* environment on Linux. Do note that if your terminal emulator does not support shortcuts for opening new terminal tabs (like [Alacritty](https://alacritty.org/index.html)), **tbmark** will not restore tabs properly (uses `Ctrl+Shift+T` by default, this value is hardcoded at the moment). This project is largely specific (to my use case) and experimental, so do expect some bugs and ugly-looking code for the time being.
 
 Installation
 ============
