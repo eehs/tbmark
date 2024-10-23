@@ -277,7 +277,7 @@ int cfg_exec(int fd, pid_t ppid, CfgInfoArr *cfginfo_list, enum tbm_actions acti
 
 				snprintf(GET_TMUX_SERVER_PID_CMD, ARG_MAX, "tmux -S %s list-window -F '#{pane_pid}'", tmux_socket_path);
 
-				if (exec_and_capture_output(GET_TMUX_SERVER_PID_CMD, first_tmux_pane_metadata_pid) == -1) {
+				if (exec_cmd_and_capture_output(GET_TMUX_SERVER_PID_CMD, first_tmux_pane_metadata_pid, PID_MAX_LEN) == -1) {
 					free(first_tmux_pane_metadata_pid);
 					free(tmux_pane_metadata);
 					return -1;
@@ -333,7 +333,7 @@ int cfg_exec(int fd, pid_t ppid, CfgInfoArr *cfginfo_list, enum tbm_actions acti
 						// Set the active tmux pane 
 						if (tmux_pane_id == 1) {
 							snprintf(TMUX_SELECT_PANE_CMD, ARG_MAX, "tmux -S %s select-pane -t %d", tmux_socket_path, active_pane_id);
-							exec_and_capture_output(TMUX_SELECT_PANE_CMD, NULL);
+							exec_cmd(TMUX_SELECT_PANE_CMD);
 						}
 
 						tmux_pane_id++;
@@ -459,7 +459,7 @@ int cfg_exec(int fd, pid_t ppid, CfgInfoArr *cfginfo_list, enum tbm_actions acti
 						// Set the active tmux pane 
 						if (tmux_pane_id == 2) {
 							snprintf(TMUX_SELECT_PANE_CMD, ARG_MAX, "tmux -S %s select-pane -t %d", tmux_socket_path, active_pane_id);
-							exec_and_capture_output(TMUX_SELECT_PANE_CMD, NULL);
+							exec_cmd(TMUX_SELECT_PANE_CMD);
 						}
 
 						if (next_tmux_pane_metadata != NULL) {
@@ -499,7 +499,7 @@ int cfg_exec(int fd, pid_t ppid, CfgInfoArr *cfginfo_list, enum tbm_actions acti
 						// Set the active tmux pane 
 						if (tmux_pane_id == 3) {
 							snprintf(TMUX_SELECT_PANE_CMD, ARG_MAX, "tmux -S %s select-pane -t %d", tmux_socket_path, active_pane_id);
-							exec_and_capture_output(TMUX_SELECT_PANE_CMD, NULL);
+							exec_cmd(TMUX_SELECT_PANE_CMD);
 						}
 
 						tmux_pane_id++;

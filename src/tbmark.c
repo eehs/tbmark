@@ -105,7 +105,7 @@ int tbm_restore(const char *filename, enum tbm_options options) {
 	char *cwd;
         regex_t userhome_regex;
         regmatch_t userhome_index;
-        int userhome_ret;
+        int userhome_regex_res;
         char userhome[PATH_MAX], cfgpath[PATH_MAX];
 	int cfg_fd;
 	CfgInfoArr *cfg_prog_entry_list;
@@ -126,10 +126,10 @@ int tbm_restore(const char *filename, enum tbm_options options) {
         ASSERT_RET(cwd != NULL);
 
         ASSERT_RET(regcomp(&userhome_regex, "(\\/home\\/[a-z0-9_-]{0,31})", REG_EXTENDED) == 0);
-        ASSERT_RET((userhome_ret = regexec(&userhome_regex, cwd, 1, &userhome_index, 0)) != REG_NOMATCH);
+        ASSERT_RET((userhome_regex_res = regexec(&userhome_regex, cwd, 1, &userhome_index, 0)) != REG_NOMATCH);
 
         regfree(&userhome_regex);
-        if (userhome_ret == 0) {
+        if (userhome_regex_res == 0) {
                 for (int i = userhome_index.rm_so, j = 0; i < userhome_index.rm_eo; i++, j++) {
                         userhome[j] = cwd[i];
 		}

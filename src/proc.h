@@ -23,7 +23,7 @@ typedef struct {
 } PIDInfoArr;
 
 int get_proc_stat(pid_t pid, PIDInfo *statusOut);
-int get_proc_cmdargs(pid_t pid, PIDInfo *cmdargsOut);
+int get_proc_cmdargs(pid_t pid, PIDInfo *cmdArgsOut);
 Window get_proc_window_id(pid_t pid);
 int get_terminal_emu_and_proc_info(PIDInfoArr **ttabs, int cfg_fd, pid_t ppid, enum tbm_actions actions);
 int getpid_of_tabs(PIDInfoArr **ttabs, pid_t ppid, pid_t mypid);

@@ -24,7 +24,7 @@ char *get_tmux_panes_info(PIDInfoArr *pane_pids) {
 	char *tmux_panes_info = calloc(IPROG_INFO_SIZE, sizeof(char));
 	ASSERT_NULL(tmux_panes_info != NULL);
 
-	int get_panes_info_res = exec_and_capture_output(GET_PANES_INFO_CMD, tmux_panes_info);
+	int get_panes_info_res = exec_cmd_and_capture_output(GET_PANES_INFO_CMD, tmux_panes_info, IPROG_INFO_SIZE);
 	ASSERT_NULL(get_panes_info_res != -1);
 
 	return tmux_panes_info;
@@ -37,10 +37,10 @@ char *log_tmux_info(int cfg_fd, enum tbm_actions actions) {
 	char *out;
 
 	// Get tmux server pid
-	char *pid_buf = calloc(PID_MAX_LEN, sizeof(char));
+	char *pid_buf = calloc(PID_MAX_LEN_WITH_NB, sizeof(char));
 	ASSERT_NULL(pid_buf != NULL);
 
-	get_tmux_spid_res = exec_and_capture_output(GET_TMUX_SERVER_PID_CMD, pid_buf);
+	get_tmux_spid_res = exec_cmd_and_capture_output(GET_TMUX_SERVER_PID_CMD, pid_buf, PID_MAX_LEN);
 	ASSERT_NULL(get_tmux_spid_res != -1);
 
 	char *tmux_spid_str = pid_buf;

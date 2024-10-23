@@ -285,15 +285,16 @@ void get_proc_info_cttabs(int cfg_fd, PIDInfo shell, PIDInfoArr **child, enum tb
 				ASSERT_EXIT(tmux_server_metadata != NULL);
 
 				// Log socket path and pane count for our tmux server 
-				get_tmux_server_metadata_res = exec_and_capture_output("tmux list-window -F 'socket_path:#{socket_path} pane_count:#{window_panes}'", tmux_server_metadata);
+				get_tmux_server_metadata_res = exec_cmd_and_capture_output("tmux list-window -F 'socket_path:#{socket_path} pane_count:#{window_panes}'", tmux_server_metadata, PATH_MAX);
 				ASSERT_EXIT(get_tmux_server_metadata_res != -1);
 
 				// With help from a tmux subcommand, we get the amount of panes in the most recently selected tmux window 
-				count = calloc(2, sizeof(char));
+				count = calloc(2, sizeof(char)); // you can't possible have 10 panes or above, right?
 				ASSERT_EXIT(count != NULL);
 
-				get_window_pane_count_res = (int)exec_and_capture_output("tmux list-panes -F '#{window_panes}' | head -1", count);
+				get_window_pane_count_res = (int)exec_cmd_and_capture_output("tmux list-panes -F '#{window_panes}' | head -1", count, 2);
 				ASSERT_EXIT(get_window_pane_count_res != -1);
+
 				tmux_pane_count = atoi(count);
 				free(count);
 
@@ -311,7 +312,7 @@ void get_proc_info_cttabs(int cfg_fd, PIDInfo shell, PIDInfoArr **child, enum tb
 					size_t tbmark_cfg_entries_len = 0;
 					int fd;
 
-					tmux_panes_arr = split(iprogram_metadata, '\n', tmux_pane_count, 0);
+					tmux_panes_arr = split_into_arr(iprogram_metadata, '\n', tmux_pane_count, 0);
 
                                         // Obtain full path of tbmark config file, we do it this way since the config file's name may be user-defined
                                         snprintf(cfg_procfs_path, 22, "/proc/self/fd/%d", cfg_fd);
@@ -322,7 +323,7 @@ void get_proc_info_cttabs(int cfg_fd, PIDInfo shell, PIDInfoArr **child, enum tb
 					memset(cfg, 0, IPROG_INFO_SIZE);
 					ASSERT_EXIT(read(fd, cfg, IPROG_INFO_SIZE) != -1);
 
-					tbmark_cfg_entries = split(cfg, '\n', MAX_TBMARK_TABS, &tbmark_cfg_entries_len);
+					tbmark_cfg_entries = split_into_arr(cfg, '\n', MAX_TBMARK_TABS, &tbmark_cfg_entries_len);
 
 					for (int j = 0; j < tmux_pane_count; j++) {
 						for (int k = 0; k < tbmark_cfg_entries_len; k++) {

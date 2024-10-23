@@ -69,7 +69,16 @@ char *get_iprogram_name(int index) {
 	return (char *)iprograms[index];
 }
 
-int exec_and_capture_output(const char *cmdIn, char *cmdOut) {
+int exec_cmd(const char *cmd) {
+        FILE *stream;
+
+        stream = popen(cmd, "r");
+        ASSERT_RET(stream != NULL);
+
+        return 0;
+}
+
+int exec_cmd_and_capture_output(const char *cmdIn, char *cmdOut, size_t maxCmdOutLen) {
         FILE *stream;
         char stream_ch;
         int stream_index = 0;
@@ -79,11 +88,11 @@ int exec_and_capture_output(const char *cmdIn, char *cmdOut) {
         ASSERT_RET(stream != NULL);
 
 	if (cmdOut != NULL) {
-        	while ((stream_ch = fgetc(stream)) != EOF) {
+        	while ((stream_ch = fgetc(stream)) != EOF && stream_index <= maxCmdOutLen) {
         	        cmdOut[stream_index++] = stream_ch;
 		}
 
-        	cmdOut[stream_index-1] = '\0';
+        	cmdOut[stream_index - 1] = '\0';
 	}
 
         pclose(stream);
@@ -100,7 +109,7 @@ char *get_homedir_of_user(uid_t uid) {
 }
 
 // Splits a string into an array of strings, provided a delimeter
-char **split(char *str, char delim, size_t maxArrLen, size_t *outArrLen) {
+char **split_into_arr(char *str, char delim, size_t maxArrLen, size_t *outArrLen) {
         char **arr = calloc(maxArrLen, sizeof(char *));
         ASSERT_NULL(arr != NULL);
 
@@ -162,7 +171,7 @@ int format_tbmark_cfg(char *path) {
 	ASSERT_RET((write_fd = cfg_open(path)) != -1);
 	
 	// Append tbmark entries that don't match the provided delimeter at the start of each line, to our buffer of updated tbmark entries
-	char **entries_arr = split(entries, '\n', lines, 0);
+	char **entries_arr = split_into_arr(entries, '\n', lines, 0);
 	if (entries_arr != NULL) {
 		for (int i = 0; i < lines; i++) {
 			for (int j = 0; j < strlen(delim); j++) {
