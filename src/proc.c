@@ -7,6 +7,7 @@
 #include <sys/ioctl.h>
 #include <fcntl.h>
 #include <unistd.h>
+#include <regex.h>
 
 #include "proc.h"
 #include "config.h"
@@ -48,33 +49,48 @@ int get_proc_stat(pid_t pid, PIDInfo *statusOut) {
 	return 0;
 }
 
-int get_proc_cmdargs(pid_t pid, PIDInfo *cmdargsOut) {
-	PIDInfo procfs_cmdargs_buf;
-	pid_t shell_pid;
-	char extract_cmdargs[PATH_MAX + 100];
-	int extract_cmdargs_res;
-
-	shell_pid = getppid();
-	ASSERT_RET(get_proc_stat(shell_pid, &procfs_cmdargs_buf) != -1);
+int get_proc_cmdargs(pid_t pid, PIDInfo *cmdArgsOut) {
+	char extract_cmdargs_cmd[PATH_MAX + 100];
+	int extract_cmdargs_cmd_res;
 
 	// Capture output of parsed '/proc/[pid]/cmdline'
-	snprintf(extract_cmdargs, sizeof(extract_cmdargs), "tr '\\0' ' ' < /proc/%d/cmdline", pid);
+	snprintf(extract_cmdargs_cmd, sizeof(extract_cmdargs_cmd), "tr '\\0' ' ' < /proc/%d/cmdline", pid);
 
-	extract_cmdargs_res = exec_and_capture_output(extract_cmdargs, cmdargsOut->cmdlargs);
-	ASSERT_RET(extract_cmdargs_res != -1);
+	extract_cmdargs_cmd_res = exec_cmd_and_capture_output(extract_cmdargs_cmd, cmdArgsOut->cmdlargs, sizeof(cmdArgsOut->cmdlargs));
+	ASSERT_RET(extract_cmdargs_cmd_res != -1);
 
 	return 0;
 }
 
 Window get_proc_window_id(pid_t pid) {
-        char window_id_str[24];
-	char extract_cmdargs[PATH_MAX + 100];
-	int extract_cmdargs_res;
+        char extract_environ_cmd[40];
+        int extract_environ_cmd_res;
+        char environ_buf[4096]; // this ceiling may not be enough, given the number of environment variables one might have
+
+        regex_t window_id_regex;
+        regmatch_t window_id_index;
+        int window_id_regex_res;
+
+        char window_id_str[25];
 
 	// Capture window id of parsed '/proc/[pid]/environ' 
-	snprintf(extract_cmdargs, sizeof(extract_cmdargs), "strings /proc/%d/environ | grep -Eo 'WINDOWID=[0-9]*'", pid);
-	extract_cmdargs_res = exec_and_capture_output(extract_cmdargs, window_id_str);
-	ASSERT_RET(extract_cmdargs_res != -1);
+	snprintf(extract_environ_cmd, sizeof(extract_environ_cmd), "tr '\\0' ' ' < /proc/%d/environ", pid);
+
+        extract_environ_cmd_res = exec_cmd_and_capture_output(extract_environ_cmd, environ_buf, sizeof(environ_buf));
+        ASSERT_RET(extract_environ_cmd_res != -1);
+
+        regcomp(&window_id_regex, "WINDOWID=([0-9]{1,10})", REG_EXTENDED);
+        window_id_regex_res = regexec(&window_id_regex, environ_buf, 1, &window_id_index, 0);
+
+        regfree(&window_id_regex);
+        if (window_id_regex_res == 0) {
+                int j = 0;
+                for (int i = window_id_index.rm_so; i < window_id_index.rm_eo; i++, j++) {
+                        window_id_str[j] = environ_buf[i];
+                }
+
+                window_id_str[j] = '\0';
+        }
 
         return (Window)atoi(window_id_str + 9);
 }
