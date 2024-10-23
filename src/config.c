@@ -19,7 +19,7 @@
 
 char *extract_tbm_entry_field_str(const char *buf, size_t maxTagAndValueLen, char *tag) {
 	char *substr_ptr = strstr(buf, tag);
-	char *field_value = calloc(maxTagAndValueLen, sizeof(char));
+	char *field_value = calloc(maxTagAndValueLen + 1, sizeof(char));
 	int tag_len = strnlen(tag, MAX_TAG_LEN);
 
 	if (substr_ptr != NULL) {
@@ -45,7 +45,7 @@ char *extract_tbm_entry_field_str(const char *buf, size_t maxTagAndValueLen, cha
 
 int extract_tbm_entry_field_int(const char *buf, size_t maxTagAndValueLen, char *tag) {
 	char *substr_ptr = strstr(buf, tag);
-	char *field_value = calloc(maxTagAndValueLen, sizeof(char));
+	char *field_value = calloc(maxTagAndValueLen + 1, sizeof(char));
 	int field_value_int;
 	int tag_len = strnlen(tag, MAX_TAG_LEN);
 
@@ -269,7 +269,7 @@ int cfg_exec(int fd, pid_t ppid, CfgInfoArr *cfginfo_list, enum tbm_actions acti
 				tmux_pane_metadata = populate_tmux_pane_metadata(cfginfo_list->entries[cfg_entry_index].iprogram_info);
 				ASSERT_RET(tmux_pane_metadata != NULL);
 
-				first_tmux_pane_metadata_pid = calloc(PID_MAX_LEN, sizeof(char));
+				first_tmux_pane_metadata_pid = calloc(PID_MAX_LEN_WITH_NB, sizeof(char));
 				if (first_tmux_pane_metadata_pid == NULL) {
 					free(tmux_pane_metadata);
 					return -1;

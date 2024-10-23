@@ -8,6 +8,7 @@
 #define FILE_NAME_MAX_LEN                       255
 #define CHILD_MAX                               sysconf(_SC_CHILD_MAX)
 #define PID_MAX_LEN                             7
+#define PID_MAX_LEN_WITH_NB                     8
 #define COMM_MAX_LEN                            17
 
 #define INTERACTIVE_PROGRAMS_COUNT              1
