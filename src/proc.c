@@ -233,7 +233,7 @@ int get_proc_info_ttabs(PIDInfoArr **ttabs, int cfg_fd, pid_t term_pid, pid_t pp
 }
 
 // TODO: Support logging of multiple tmux windows running simultaneously
-// Counter controlling spacing of processes' debug output
+// Counter controlling spacing of debug output
 static int indentation_counter = 0;
 
 // Logging of terminal tab programs occur here 

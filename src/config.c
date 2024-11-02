@@ -82,7 +82,6 @@ char *strip_args_from_cmd(const char *cmd) {
         regmatch_t strip_delim_index;
         int status;
 
-        // FIXME: This is undefined behaviour, which actually causes a segfault, should be looked into further 
         ASSERT_NULL(regcomp(&strip_delim_regex, "(.*)>", REG_EXTENDED) == 0);
         ASSERT_NULL((status = regexec(&strip_delim_regex, cmd, 1, &strip_delim_index, 0)) != REG_NOMATCH);
 
