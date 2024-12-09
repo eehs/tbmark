@@ -8,7 +8,6 @@
 #include <unistd.h>
 #include <linux/limits.h>
 #include <xdo.h>
-#include <regex.h>
 #include "iprograms/tmux.h"
 
 #include "config.h"
@@ -73,30 +72,6 @@ int extract_tbm_entry_field_int(const char *buf, size_t maxTagAndValueLen, char 
 	return -1;
 }
 
-// Strips the argument portion of a command and return it 
-char *strip_args_from_cmd(const char *cmd) {
-        char *stripped = calloc(strlen(cmd), sizeof(char));
-        ASSERT_NULL(stripped != NULL);
-
-        regex_t strip_delim_regex;
-        regmatch_t strip_delim_index;
-        int status;
-
-        ASSERT_NULL(regcomp(&strip_delim_regex, "(.*)>", REG_EXTENDED) == 0);
-        ASSERT_NULL((status = regexec(&strip_delim_regex, cmd, 1, &strip_delim_index, 0)) != REG_NOMATCH);
-
-        regfree(&strip_delim_regex);
-        if (status == 0) {
-                for (int i = strip_delim_index.rm_so, j = 0;
-                        i < (strip_delim_index.rm_eo - 1); 
-                        i++, j++) {
-                        stripped[j] = cmd[i];
-                }
-        }
-
-        return stripped;
-}
-
 int cfg_create(const char *pathname) {
         int res = open(pathname, O_CREAT | O_TRUNC, S_IRUSR | S_IWUSR);
         ASSERT_RET(res != -1);
@@ -118,7 +93,7 @@ int cfg_open(const char *pathname) {
 CfgInfoArr *cfg_parse(int fd) {
 	char *buf;
 	struct stat sbuf;
-	char *iprog_args, *iprog_name, *iprog_info, *cwdir, *cmd, *comm, *args, *stripped_args, *metadata;
+	char *iprog_args, *iprog_name, *iprog_info, *cwdir, *cmd, *comm, *args, *metadata;
 	CfgInfoArr *cfginfo_list;
 	size_t lines[MAX_TBMARK_ENTRIES] = {0}, tbmark_entries_len = 0;
 
@@ -149,19 +124,18 @@ CfgInfoArr *cfg_parse(int fd) {
 			? "" 
 			: extract_tbm_entry_field_str(cmd + strlen(comm) + 1, PATH_MAX, "");
 
-                // Extract the command's arguments
-                if (strlen(comm) > 1 && strlen(args) > 1) {
-                        stripped_args = strip_args_from_cmd(cmd + strlen(comm) + 1);
-                        strncpy(args, stripped_args, PATH_MAX);
+                if (strlen(args) > 1) {
+                        args[strlen(args) - 1] = '\0';
+                        // DEBUG
+                        printf("'%s'\n", args);
+                }
 
-                        free(stripped_args);
-
-                } else if (strlen(comm) > 1 && strlen(args) == 0) {
-                        // Equivalent to a terminal tab with a command and no arguments 
+                // Terminal tab with a command and zero arguments 
+                if (strlen(comm) > 1 && strlen(args) == 0) {
                         comm[strlen(comm) - 1] = '\0';
 
-                } else {
-                        // Equivalent to an empty terminal tab with no commands inputted 
+                // Terminal tab with no commands entered
+                } else if (strlen(comm) == 0 && strlen(args) == 0) {
                         strncpy(args, " ", 2);
                 }
 

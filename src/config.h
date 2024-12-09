@@ -25,8 +25,6 @@ typedef struct {
 char *extract_tbm_entry_field_str(const char *buf, size_t maxTagAndValueLen, char *tag);
 int extract_tbm_entry_field_int(const char *buf, size_t maxTagAndValueLen, char *tag);
 
-char *strip_args_from_cmd(const char *cmd);
-
 int cfg_create(const char *pathname);
 int cfg_open(const char *pathname);
 CfgInfoArr *cfg_parse(int fd);
