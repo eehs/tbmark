@@ -41,7 +41,10 @@ The fact that the saving function in `tbmark` collects process information post-
 
 TODO
 ====
+- [ ] Add a working test suite. (unit, integration, system)
+- [ ] Store any temporary terminal tab data in memory before any final processing is done, then only write to disk. This way I can avoid writing any unformatted output to disk unnecessarily.
 - [ ] Get rid of the horrible hardcoded mess when restoring terminal tabs using `tmux` panes (create a custom `tmux` command builder).
+- [ ] Package this program as a debian package.
 - [ ] Save terminal tab titles (if any).
 - [ ] Add shell completion support for subcommands.
 - [ ] Assign more helpful error messages.
