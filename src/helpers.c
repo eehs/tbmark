@@ -66,7 +66,7 @@ bool running_as_root() {
 }
 
 char *get_iprogram_name(int index) {
-	return (char *)iprograms[index];
+        return (index >= sizeof(iprograms)/sizeof(iprograms[0])) ? "NONE" : (char *)iprograms[index];
 }
 
 int exec_cmd(const char *cmd) {
@@ -74,6 +74,8 @@ int exec_cmd(const char *cmd) {
 
         stream = popen(cmd, "r");
         ASSERT_RET(stream != NULL);
+
+        pclose(stream);
 
         return 0;
 }
@@ -109,6 +111,7 @@ char *get_homedir_of_user(uid_t uid) {
 }
 
 // Splits a string into an array of strings, provided a delimeter
+// `outArrLen` is nothing but a `size_t` that holds the actual length of the output array
 char **split_into_arr(char *str, char delim, size_t maxArrLen, size_t *outArrLen) {
         char **arr = calloc(maxArrLen, sizeof(char *));
         ASSERT_NULL(arr != NULL);
@@ -188,22 +191,26 @@ int format_tbmark_cfg(char *path) {
 
         free(entries);
 	free_str_arr(entries_arr, lines);
+        entries_arr = NULL;
+
 	free(updated_entries);
 
         return 0;
 }
 
-void print_cfg_tabs_from_fd(int fd, bool showDebug, const char *filename, bool getInteractiveProgramMetadata, char **tmuxSocketPath, int *tmuxPaneCount) {
+void print_cfg_tabs_from_fd(int fd, bool logging, const char *filename, bool getInteractiveProgramMetadata, char **tmuxSocketPath, int *tmuxPaneCount) {
         CfgInfoArr *cfg_entries = cfg_parse(fd);
 
         if (!cfg_entries->entries_len)
                 printf("No tabs were saved.\n");
 
-        if (showDebug)
+        if (logging)
                 printf("Listing saved tabs from '%s'\n\n", filename);
 
-        // t (index for all tbmark entries), i (index for iprogram-specific windows/structures only), r (index for regular programs only) 
-        int t = 0, i = 0, r = 0;
+        int t = 0, // index for all tbmark entries
+        i = 0, // index for iprogram-specific windows/structures
+        r = 0; // index for regular programs
+
         for (; t < cfg_entries->entries_len; t++) {
                 // Is an 'iprogram'
                 if (strlen(cfg_entries->entries[t].iprogram_name) > 0) {

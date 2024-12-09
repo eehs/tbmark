@@ -27,24 +27,24 @@ int get_proc_stat(pid_t pid, PIDInfo *statusOut) {
 	memset(procfs_status_buf, 0, sizeof(procfs_status_buf));
 	bytes_read = read(statfd, procfs_status_buf, sizeof(procfs_status_buf));
 	if (bytes_read < 0) {
-		close(statfd);
-		ASSERT_RET(false);
-	}
+                close(statfd);
+                ASSERT_RET(false);
+        }
 
 	items = sscanf(procfs_status_buf, "%d (%16[^)]) %c %d %d %d %lu", 
 			&statusOut->pid, statusOut->comm, &statusOut->state,
 			&statusOut->ppid, &statusOut->sid, &statusOut->pgid, &statusOut->ctty);
 	if (items != 7) {
-		close(statfd);
-		ASSERT_RET(false);
-	}
+                close(statfd);
+                ASSERT_RET(false);
+        }
 
 	snprintf(cwd_path, PATH_MAX, "/proc/%d/cwd", pid);
 	getcwd_res = readlink(cwd_path, statusOut->cwd, sizeof(statusOut->cwd));
 	if (getcwd_res < 0) {
-		close(statfd);
-		ASSERT_RET(false);
-	}
+                close(statfd);
+                ASSERT_RET(false);
+        }
 
 	return 0;
 }
@@ -155,7 +155,7 @@ int getpid_of_tabs(PIDInfoArr **ttabs, pid_t ppid, pid_t mypid) {
 
                 pid_t childpid = strtoul(childpid_str, &endptr, 10);
                 if (childpid > 0) {
-                        // Hop over current tab and make sure we filter out tabs that are not part of the current window
+                        // Hop over current tab and make sure we filter out terminal tabs that are not part of the current terminal session
                         if (childpid != mypid) {
                                 if (strlen(childpid_str) > 1 && get_proc_window_id(childpid) == active_window_id)
         	        	        childpid_arr[childpid_count++] = childpid;
@@ -236,6 +236,7 @@ int get_proc_info_ttabs(PIDInfoArr **ttabs, int cfg_fd, pid_t term_pid, pid_t pp
 // Counter controlling spacing of debug output
 static int indentation_counter = 0;
 
+// NOTE: Process information of cttabs (running in tmux) that don't belong to the current terminal session show up in verbose mode, despite already being killed. Restarting the tmux session fixes it though.
 // Logging of terminal tab programs occur here 
 void get_proc_info_cttabs(int cfg_fd, PIDInfo shell, PIDInfoArr **child, enum tbm_actions actions) {
 	char buf[TBMARK_SINGLE_ENTRY_SIZE];
@@ -255,7 +256,7 @@ void get_proc_info_cttabs(int cfg_fd, PIDInfo shell, PIDInfoArr **child, enum tb
                 }
 	}
 
-        // Empty shell tabs running nothing are saved into the auto-generated config file, alongside shell programs 
+        // Empty shell tabs not running any programs are also saved to the config file
         pid_t pid = (*child)->pidlist[0].pid;
         pid_t ppid = shell.pid;
         char *cwd = (!pid) ? shell.cwd : (*child)->pidlist[0].cwd;
@@ -305,7 +306,7 @@ void get_proc_info_cttabs(int cfg_fd, PIDInfo shell, PIDInfoArr **child, enum tb
 				ASSERT_EXIT(get_tmux_server_metadata_res != -1);
 
 				// With help from a tmux subcommand, we get the amount of panes in the most recently selected tmux window 
-				count = calloc(2, sizeof(char)); // you can't possible have 10 panes or above, right?
+				count = calloc(2, sizeof(char)); // you can't possible have more than 10 panes, right?
 				ASSERT_EXIT(count != NULL);
 
 				get_window_pane_count_res = (int)exec_cmd_and_capture_output("tmux list-panes -F '#{window_panes}' | head -1", count, 2);
@@ -364,6 +365,9 @@ void get_proc_info_cttabs(int cfg_fd, PIDInfo shell, PIDInfoArr **child, enum tb
 
 					free_str_arr(tbmark_cfg_entries, MAX_TBMARK_TABS);
 					free_str_arr(tmux_panes_arr, tmux_pane_count);
+
+                                        tbmark_cfg_entries = NULL;
+                                        tmux_panes_arr = NULL;
 				}
 
 				free(tmux_server_metadata);

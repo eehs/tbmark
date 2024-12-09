@@ -208,7 +208,7 @@ int cfg_exec(int fd, pid_t ppid, CfgInfoArr *cfginfo_list, enum tbm_actions acti
         char OPEN_TBMARK_ENTRIES_CMD[ARG_MAX + 5120];
 	xdo_t *xdo;
 
-	// tmux specific variables 
+	// tmux window data
 	int tmux_pane_id = 0, tmux_pane_count;
 	char *tmux_socket_path = calloc(PATH_MAX, sizeof(char));
 

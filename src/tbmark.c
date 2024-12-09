@@ -15,9 +15,6 @@
 #include "helpers.h"
 #include "debug.h"
 
-// TODO: Make memory deallocations explicit (on crashes and exits)
-// TODO: Add some form of testing (different scenarios, e.g., multiple terminal tabs, CLI arguments with space characters, etc)
-
 static struct option long_options[] = {
           { "save", no_argument, NULL, 's' },
           { "restore", no_argument, NULL, 'r' },

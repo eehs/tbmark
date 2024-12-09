@@ -4,7 +4,7 @@
 #define IPROG_INFO_SIZE 1024 // seems like a decent threshold value for holding iprogram information
 
 typedef enum {
-	TBM_TMUX
+	TBM_TMUX,
 } tbmark_supported_iprograms;
 
 // Dedicated function pointers for arguments of a specific type
@@ -26,7 +26,7 @@ int exec_cmd(const char *cmd);
 int exec_cmd_and_capture_output(const char *cmdIn, char *cmdOut, size_t maxCmdOutLen);
 char **split_into_arr(char *str, char delim, size_t maxArrLen, size_t *outArrLen);
 int format_tbmark_cfg(char *path);
-void print_cfg_tabs_from_fd(int fd, bool showDebug, const char *filename, bool getInteractiveProgramMetadata, char **tmuxSocketPath, int *tmuxPaneCount);
+void print_cfg_tabs_from_fd(int fd, bool logging, const char *filename, bool getInteractiveProgramMetadata, char **tmuxSocketPath, int *tmuxPaneCount);
 void free_str_arr(char **arr, size_t arrLen);
 
 #endif // TBMARK_HELPERS_H
