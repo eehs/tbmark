@@ -128,11 +128,8 @@ CfgInfoArr *cfg_parse(int fd) {
 			? "" 
 			: extract_tbm_entry_field_str(cmd + strlen(comm) + 1, PATH_MAX, "");
 
-                if (strlen(args) > 1) {
+                if (strlen(args) > 1)
                         args[strlen(args) - 1] = '\0';
-                        // DEBUG
-                        printf("'%s'\n", args);
-                }
 
                 // Terminal tab with a command and zero arguments 
                 if (strlen(comm) > 1 && strlen(args) == 0) {
