@@ -12,19 +12,19 @@ void __printf ERROR(const char *msg, ...);
 
 #define ASSERT_EXIT(res) \
 	if (!(res)) { \
-		(ERROR("\e[31m%s\e[0m @ %s:%d (%s)", strerror(errno), __func__, __LINE__, __FILE__)); \
+		(ERROR("\e[31m%s\e[0m @ %s (%s:%d)", strerror(errno), __func__, __FILE__, __LINE__)); \
 		exit(1); \
 	} \
 
 #define ASSERT_RET(res) \
 	if (!(res)) { \
-		(ERROR("\e[31m%s\e[0m @ %s:%d (%s)", strerror(errno), __func__, __LINE__, __FILE__)); \
+		(ERROR("\e[31m%s\e[0m @ %s (%s:%d)", strerror(errno), __func__, __FILE__, __LINE__)); \
 		return -1; \
 	} \
 
 #define ASSERT_NULL(res) \
 	if (!(res)) { \
-		(ERROR("\e[31m%s\e[0m @ %s:%d (%s)", strerror(errno), __func__, __LINE__, __FILE__)); \
+		(ERROR("\e[31m%s\e[0m @ %s (%s:%d)", strerror(errno), __func__, __FILE__, __LINE__)); \
 		return NULL; \
 	} \
 
