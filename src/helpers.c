@@ -214,24 +214,24 @@ void print_cfg_tabs_from_fd(int fd, bool logging, const char *filename, bool get
         for (; t < cfg_entries->entries_len; t++) {
                 // Is an 'iprogram'
                 if (strlen(cfg_entries->entries[t].iprogram_name) > 0) {
-                        printf(" ↳ %s %d (%s): %s", iprogram_glossary[cfg_entries->entries[t].iprogram_index], i+1, cfg_entries->entries[t].cwd, (strlen(cfg_entries->entries[t].comm) > 1) ? "\"" : "-"
+                        printf(" ↳ %s %d (%s): %c", iprogram_glossary[cfg_entries->entries[t].iprogram_index], i+1, cfg_entries->entries[t].cwd, (strlen(cfg_entries->entries[t].comm) > 0) ? '"' : '-' 
 );
-                        if (strlen(cfg_entries->entries[t].comm) > 1)
+                        if (strlen(cfg_entries->entries[t].comm) > 0)
                                 printf("%s", cfg_entries->entries[t].comm);
 
                         if (strncmp(cfg_entries->entries[t].cmdlargs, " ", 1) != 0)
-                                printf("%s%s\"", (strlen(cfg_entries->entries[t].cmdlargs) >= 1) ? " " : "", cfg_entries->entries[t].cmdlargs);
+                                printf("%s%s%c", (strlen(cfg_entries->entries[t].cmdlargs) >= 1) ? " " : "", cfg_entries->entries[t].cmdlargs, (strlen(cfg_entries->entries[t].comm) > 0) ? '"' : ' ');
 
                         printf("\n");
                         i++;
                 } else {
-                        printf("Tab %d (%s): %s", r+1, cfg_entries->entries[t].cwd, (strlen(cfg_entries->entries[t].comm) > 1 ? "\"" : "-"));
+                        printf("Tab %d (%s): %c", r+1, cfg_entries->entries[t].cwd, (strlen(cfg_entries->entries[t].comm) > 0 ? '"' : '-'));
 
-                        if (strlen(cfg_entries->entries[t].comm) > 1)
+                        if (strlen(cfg_entries->entries[t].comm) > 0)
                                 printf("%s", cfg_entries->entries[t].comm);
 
                         if (strncmp(cfg_entries->entries[t].cmdlargs, " ", 1) != 0)
-                                printf("%s%s\"", (strlen(cfg_entries->entries[t].cmdlargs) >= 1) ? " " : "", cfg_entries->entries[t].cmdlargs);
+                                printf("%s%s%c", (strlen(cfg_entries->entries[t].cmdlargs) >= 1) ? " " : "", cfg_entries->entries[t].cmdlargs, (strlen(cfg_entries->entries[t].comm) > 0) ? '"' : ' ');
 
                         printf("\n");
                         r++;

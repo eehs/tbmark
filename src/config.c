@@ -124,21 +124,18 @@ CfgInfoArr *cfg_parse(int fd) {
 		cmd = extract_tbm_entry_field_str(buf + lines[i], ARG_MAX, "cmdlargs:");
 		comm = extract_tbm_entry_field_str(cmd, COMM_MAX_LEN, "");
 
-		args = (strstr(cmd, "") == NULL || strstr(cmd, "(metadata)") != NULL)
+		args = (strstr(cmd, "") == NULL || strstr(cmd, "(metadata)") != NULL) || comm[strlen(comm) - 1] == '>'
 			? "" 
 			: extract_tbm_entry_field_str(cmd + strlen(comm) + 1, PATH_MAX, "");
 
                 if (strlen(args) > 1)
                         args[strlen(args) - 1] = '\0';
+                else if (args[0] == '>')
+                        args = "";
 
                 // Terminal tab with a command and zero arguments 
-                if (strlen(comm) > 1 && strlen(args) == 0) {
+                if (strlen(comm) > 1 && strlen(args) == 0)
                         comm[strlen(comm) - 1] = '\0';
-
-                // Terminal tab with no commands entered
-                } else if (strlen(comm) == 0 && strlen(args) == 0) {
-                        strncpy(args, " ", 2);
-                }
 
 		metadata = (strstr(cmd, "(metadata) ") == NULL) ? "" : cmd + strlen(comm) + 12;
 
