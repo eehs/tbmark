@@ -28,12 +28,21 @@ char *extract_tbm_entry_field_str(const char *buf, size_t maxTagAndValueLen, cha
 				(int)strnlen(substr_ptr, maxTagAndValueLen) - tag_len,
 				substr_ptr + tag_len);
 
+                bool insideQuotes = (field_value[0] == '"' || field_value[0] == '\'') ? true : false;
+
 		for (int i = 0; i < strnlen(field_value, maxTagAndValueLen); i++) {
-        		if (field_value[i] == '\n' || (strncmp(tag, "cmdlargs:", 9) != 0 && strncmp(tag, "[tmux] ", 6) != 0 && field_value[i] == ' ')) {
-	        		field_value[i] = '\0';
-		        	break;
-        		}
-		}
+                        if (insideQuotes) {
+                                if (i > 0 && field_value[i] == '\n') {
+                                        field_value[i] = '\0';
+                                        break;
+                                }
+                        } else {
+                                if (field_value[i] == '\n' || (strncmp(tag, "cmdlargs:", 9) != 0 && strncmp(tag, "[tmux] ", 6) != 0 && field_value[i] == ' ')) {
+                                        field_value[i] = '\0';
+                                        break;
+                                }
+                        }
+                }
 
 		return field_value;
 	}
@@ -137,7 +146,9 @@ CfgInfoArr *cfg_parse(int fd) {
                 if (strlen(comm) > 1 && strlen(args) == 0)
                         comm[strlen(comm) - 1] = '\0';
 
-		metadata = (strstr(cmd, "(metadata) ") == NULL) ? "" : cmd + strlen(comm) + 12;
+		metadata = (strstr(cmd, "(metadata) ") == NULL)
+                        ? ""
+                        : cmd + strlen(comm) + 12;
 
 		// We check and see if the current command was started within an 'iprogram'
 		iprog_args = extract_tbm_entry_field_str(buf + lines[i], PATH_MAX, "cmdlargs:");
@@ -206,21 +217,22 @@ int cfg_exec(int fd, pid_t ppid, CfgInfoArr *cfginfo_list, enum tbm_actions acti
 	int tmux_pane_id = 0, tmux_pane_count;
 	char *tmux_socket_path = calloc(PATH_MAX, sizeof(char));
 
-	int normal_prog_counter = 0; // Since 'iprograms' may include panes containing programs such as tmux, we keep a counter over the 'regular' programs
+        // Since 'iprograms' may include 'panes' (like in tmux), we keep track of the regular programs with this counter
+	int normal_prog_counter = 0; 
 
         print_cfg_tabs_from_fd(fd, false, NULL, true, &tmux_socket_path, &tmux_pane_count);
 
-        // We escape special characters found in CLI arguments here 
-        char *escaped_cmdlargs, special_chars[18] = "&*{}[]<>,=-().+;'/";
+        // We wrap any arguments containing special characters in double quotes
+        char *wrapped_cmdlargs, special_chars[18] = "&*{}[]<>,=-().+;'/";
         for (int i = 0; i < cfginfo_list->entries_len; i++) {
                 for (int j = 0; j < 18; j++) {
                         if (strchr(cfginfo_list->entries[i].cmdlargs, special_chars[j]) != NULL) {
-                                escaped_cmdlargs = calloc(ARG_MAX, sizeof(char));
+                                wrapped_cmdlargs = calloc(ARG_MAX, sizeof(char));
 
-                                snprintf(escaped_cmdlargs, strlen(cfginfo_list->entries[i].cmdlargs) + 3, "'%s'", cfginfo_list->entries[i].cmdlargs);
-                                strncpy(cfginfo_list->entries[i].cmdlargs, escaped_cmdlargs, ARG_MAX);
+                                snprintf(wrapped_cmdlargs, strlen(cfginfo_list->entries[i].cmdlargs) + 3, "\"%s\"", cfginfo_list->entries[i].cmdlargs);
+                                strncpy(cfginfo_list->entries[i].cmdlargs, wrapped_cmdlargs, ARG_MAX);
 
-                                free(escaped_cmdlargs);
+                                free(wrapped_cmdlargs);
                                 break;
                         }
                 }
