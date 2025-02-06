@@ -86,7 +86,7 @@ int extract_tbm_entry_field_int(const char *buf, size_t maxTagAndValueLen, char 
 }
 
 int cfg_create(const char *pathname) {
-        int res = open(pathname, O_CREAT | O_EXCL | O_TRUNC, S_IRUSR | S_IWUSR);
+        int res = open(pathname, O_CREAT | O_TRUNC, S_IRUSR | S_IWUSR);
         ASSERT_RET(res != -1);
 
 	close(res);
