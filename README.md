@@ -7,8 +7,8 @@ https://github.com/user-attachments/assets/55f800b4-0df8-428c-a987-3e88a061b35c
 
 The main motivation behind this project was to boost productivity since my workflow usually involves multiple opened tabs, and for learning purposes of course! Any form of feedback is thus greatly appreciated!
 
-> [!IMPORTANT]
-> **tbmark** is meant to be used in a *desktop* environment on Linux. Do note that if your terminal emulator does not support shortcuts for opening new terminal tabs (like [Alacritty](https://alacritty.org/index.html)), **tbmark** will not restore tabs properly (uses `Ctrl+Shift+T` by default, this value is hardcoded at the moment). This project is largely specific to my use case and experimental, so do expect bugs and ugly-looking code for the time being.
+> [!NOTE]
+> **tbmark** is meant to be used in a *desktop* environment on Linux. This project is largely specific to my use case and experimental, so do expect bugs and ugly-looking code for the time being.
 
 Installation
 ============
@@ -22,7 +22,7 @@ Installation
 Usage
 =====
 > [!NOTE]
-> CLI programs that fall under tbmark's umbrella are ones that are long-running (`vim`, `less`), and **NOT** short-lived programs (`ls`, `grep`). Check out [Limitations](#Limitations) for more context. 
+> CLI programs that fall under tbmark's umbrella are ones that are interactive (`vim`, `less`), and **NOT** short-lived programs (`ls`, `grep`). Check out [Limitations](#Limitations) for more context. 
 
 ```
 Usage: tbmark [OPTION] [FILE]
@@ -37,11 +37,14 @@ Available options:
 
 Limitations
 ===========
+> [!IMPORTANT]
+> `tbmark` currently plays nice with a small amount of terminal emulators only, namely *xfce4-terminal*, *konsole* and *kitty*. Support for other terminal emulators are a work in progress!
+
 The fact that the saving function in `tbmark` collects process information post-execution, handy features such as *restoring short-lived programs, piped commands* and the *terminal output buffer* can prove tricky (near impossible) to implement. With this in mind, there might be plans in the future to rewrite `tbmark` to *watch* these commands as they're being executed. Something like that can be done by attaching to the shell process right from the get-go, before even executing said commands, so that `tbmark` can obtain the appropriate process information before *saving* your terminal tabs. But hey, I might as well use [screen](https://www.gnu.org/software/screen/) or a [tmux](https://github.com/tmux/tmux) plugin to do the job at this point :)
 
 TODO
 ====
-- [ ] Add a working test suite. (unit, integration, system)
+- [ ] Add a working test suite (unit, integration, system) and test `tbmark` on various terminal emulator software. (Supported: xfce4-terminal, konsole, kitty) (Not supported: gnome-terminal, terminator, tilix, alacritty, ghostty)
 - [ ] Store any temporary terminal tab data in memory before any final processing is done, then only write to disk. This way I can avoid writing any unformatted output to disk unnecessarily.
 - [ ] Get rid of the horrible hardcoded mess when restoring terminal tabs using `tmux` panes (create a custom `tmux` command builder).
 - [ ] Package this program as a debian package.
