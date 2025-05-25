@@ -9,10 +9,10 @@
 #include <unistd.h>
 #include <regex.h>
 
-#include "proc.h"
-#include "config.h"
-#include "helpers.h"
-#include "debug.h"
+#include <proc.h>
+#include <config.h>
+#include <helpers.h>
+#include <debug.h>
 
 int get_proc_stat(pid_t pid, PIDInfo *statusOut) {
 	char procfs_status_buf[1024];

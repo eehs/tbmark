@@ -9,11 +9,11 @@
 #include <regex.h>
 #include <getopt.h>
 
-#include "tbmark.h"
-#include "proc.h"
-#include "config.h"
-#include "helpers.h"
-#include "debug.h"
+#include <tbmark.h>
+#include <proc.h>
+#include <config.h>
+#include <helpers.h>
+#include <debug.h>
 
 static struct option long_options[] = {
           { "save", no_argument, NULL, 's' },

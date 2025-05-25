@@ -8,11 +8,11 @@
 #include <unistd.h>
 #include <linux/limits.h>
 #include <xdo.h>
-#include "iprograms/tmux.h"
 
-#include "config.h"
-#include "debug.h"
-#include "helpers.h"
+#include <iprograms/tmux.h>
+#include <config.h>
+#include <debug.h>
+#include <helpers.h>
 
 //#define DEBUG
 

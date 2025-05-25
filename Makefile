@@ -1,5 +1,5 @@
 CC=gcc
-CFLAGS=-O2 -fdata-sections -ffunction-sections -g -Wall -fstack-protector-strong -Wno-error
+CFLAGS=-I./src -O2 -fdata-sections -ffunction-sections -g -Wall -fstack-protector-strong -Wno-error
 CLIBS=-lxdo
 SRC_DIR=src
 IPROGRAMS_DIR=$(SRC_DIR)/iprograms

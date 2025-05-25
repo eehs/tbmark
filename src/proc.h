@@ -4,7 +4,8 @@
 #include <stdbool.h>
 #include <aio.h>
 #include <xdo.h>
-#include "common.h"
+
+#include <common.h>
 
 typedef struct {
 	pid_t pid;

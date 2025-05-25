@@ -1,7 +1,8 @@
 #include <stdio.h>
 #include <string.h>
 #include <stdarg.h>
-#include "debug.h"
+
+#include <debug.h>
 
 void print_with_prefix(const char *prefix, const char *msg, va_list vargs) {
         if (prefix)

@@ -2,11 +2,11 @@
 #include <stdlib.h>
 #include <string.h>
 
-#include "tmux.h"
-#include "../proc.h"
-#include "../config.h"
-#include "../helpers.h"
-#include "../debug.h"
+#include <iprograms/tmux.h>
+#include <proc.h>
+#include <config.h>
+#include <helpers.h>
+#include <debug.h>
 
 /* Steps to retrieve process metadata of tmux panes
  * ------------------------------------------------

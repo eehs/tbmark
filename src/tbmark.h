@@ -1,7 +1,7 @@
 #ifndef TBMARK_MAIN_H
 #define TBMARK_MAIN_H
 
-#include "common.h"
+#include <common.h>
 
 #define TBMARK_SUBCMDS_LEN (sizeof(tbm_subcmd_table)/sizeof(tbm_subcmd_table[0]))
 #define TBMARK_DIRNAME ".tbmark"

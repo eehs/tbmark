@@ -3,8 +3,9 @@
 
 #include <ctype.h>
 #include <linux/limits.h>
-#include "common.h"
-#include "proc.h"
+
+#include <common.h>
+#include <proc.h>
 
 typedef struct {
 	char cwd[PATH_MAX];

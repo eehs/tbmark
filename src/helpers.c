@@ -4,10 +4,10 @@
 #include <unistd.h>
 #include <pwd.h>
 
-#include "config.h"
-#include "debug.h"
-#include "helpers.h"
-#include "iprograms/tmux.h"
+#include <iprograms/tmux.h>
+#include <config.h>
+#include <debug.h>
+#include <helpers.h>
 
 /* Glossary: 
  * - iprograms: Interactive programs that implement some form of terminal multiplexing involving little-to-heavy terminal I/O, such programs are 'tmux' and 'screen' for example. They also include any other programs whose process information are not directly available through procfs.

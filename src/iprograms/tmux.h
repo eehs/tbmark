@@ -1,9 +1,9 @@
 #ifndef TBMARK_IPROG_TMUX_H
 #define TBMARK_IPROG_TMUX_H
 
-#include "../proc.h"
-#include "../config.h"
-#include "../common.h"
+#include <proc.h>
+#include <config.h>
+#include <common.h>
 
 typedef struct {
 	int width;
