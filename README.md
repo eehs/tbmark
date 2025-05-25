@@ -22,7 +22,7 @@ Installation
 Usage
 =====
 > [!NOTE]
-> CLI programs that fall under tbmark's umbrella are ones that are interactive (`vim`, `less`), and **NOT** short-lived programs (`ls`, `grep`). Check out [Limitations](#Limitations) for more context. 
+> CLI programs that fall under tbmark's umbrella are ones that are interactive like `vim` or `less`, and **NOT** short-lived programs like `ls` or `grep`. Check out [Limitations](#Limitations) for more context. 
 
 ```
 Usage: tbmark [OPTION] [FILE]
@@ -45,9 +45,9 @@ The fact that the saving function in `tbmark` collects process information post-
 TODO
 ====
 - [ ] Add a working test suite (unit, integration, system) and test `tbmark` on various terminal emulator software. (Supported: xfce4-terminal, konsole, kitty) (Not supported: gnome-terminal, terminator, tilix, alacritty, ghostty)
-- [ ] Store any temporary terminal tab data in memory before any final processing is done, then only write to disk. This way I can avoid writing any unformatted output to disk unnecessarily.
+- [ ] Store any temporary terminal tab data in memory before any final processing is done, then only write to disk. This way I can avoid writing unformatted output to disk unnecessarily.
 - [ ] Get rid of the horrible hardcoded mess when restoring terminal tabs using `tmux` panes (create a custom `tmux` command builder).
-- [ ] Package this program as a debian package.
+- [ ] Package this program as a Debian package.
 - [ ] Save terminal tab titles (if any).
 - [ ] Add shell completion support for subcommands.
 - [ ] Assign more helpful error messages.
